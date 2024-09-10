@@ -1,7 +1,7 @@
 package com.jetbrains.kmpapp
 
 import android.app.Application
-import com.jetbrains.BS23_KMP.di.initKoin
+import com.jetbrains.bs23_kmp.di.initKoin
 
 class MuseumApp : Application() {
     override fun onCreate() {

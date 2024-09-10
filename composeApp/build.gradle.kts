@@ -7,9 +7,16 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.kspCompose)
+    alias(libs.plugins.room)
+
 }
 
+
 kotlin {
+    sourceSets.commonMain {
+        kotlin.srcDir("build/generated/ksp/metadata")
+    }
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
@@ -33,14 +40,18 @@ kotlin {
             implementation(libs.androidx.compose.ui.tooling.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
+            //Room
+            implementation(libs.room.runtime.android)
+
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+            implementation("app.cash.paging:paging-runtime-uikit:3.3.0-alpha02-0.5.1")
         }
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
-            implementation(compose.material)
+            implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
@@ -53,7 +64,30 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.navigation.compose)
+
+            //Paging Library
+            implementation("app.cash.paging:paging-common:3.3.0-alpha02-0.5.1")
+            implementation("app.cash.paging:paging-compose-common:3.3.0-alpha02-0.5.1")
+
+            //Logging - Kermit
+            implementation("co.touchlab:kermit:2.0.4")
+            //Room
+            implementation(libs.room.runtime)
+            //dateTime
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
+            //Serialization
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.2")
+
+
+
+
         }
+    }
+}
+
+buildscript {
+    repositories{
+        mavenCentral()
     }
 }
 
@@ -83,7 +117,24 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 }
+room {
+    schemaDirectory("$projectDir/schemas")
+}
 
 dependencies {
+    add("kspCommonMainMetadata", libs.room.compiler)
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinCompile<*>>().configureEach {
+    if (name != "kspCommonMainKotlinMetadata" ) {
+        dependsOn("kspCommonMainKotlinMetadata")
+    }
+}
+
+dependencies {
+    implementation(libs.androidx.ui.android)
+    implementation(libs.androidx.annotation.jvm)
+    implementation(libs.play.services.location)
+    implementation(libs.androidx.lifecycle.livedata.core.ktx)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
