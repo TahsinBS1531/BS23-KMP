@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.bs23.msfa.core.base.Delayed
+import com.jetbrains.bs23_kmp.core.base.Delayed
 
 object ProgressIndicatorDefaults {
     val sizeLarge = 32.dp to 2.dp
