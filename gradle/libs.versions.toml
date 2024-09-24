@@ -8,6 +8,7 @@ koin = "4.0.0-RC2"
 kotlin = "2.0.20"
 ktor = "2.3.12"
 navigationCompose = "2.7.0-alpha07"
+androidx-lifecycle = "2.8.0"
 
 #Room
 roomCommon = "2.7.0-alpha07"
@@ -17,7 +18,14 @@ playServicesLocation = "21.3.0"
 annotationJvm = "1.8.2"
 uiAndroid = "1.7.0"
 
+#Firebase
+firebase-bom = "32.7.4"
+firebase-crashlytics-plugin = "2.9.9"
+google-play-services = "4.4.1"
+
 [libraries]
+androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "androidx-ui-tooling" }
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "androidx-ui-tooling" }
@@ -39,6 +47,10 @@ play-services-location = { group = "com.google.android.gms", name = "play-servic
 androidx-annotation-jvm = { group = "androidx.annotation", name = "annotation-jvm", version.ref = "annotationJvm" }
 androidx-ui-android = { group = "androidx.compose.ui", name = "ui-android", version.ref = "uiAndroid" }
 
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
+firebase-crashlyticsKtx = { module = "com.google.firebase:firebase-crashlytics-ktx" }
+
+
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref =  "kotlin" }
@@ -47,3 +59,6 @@ kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref =
 kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kspCompose = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room", version.ref = "roomCommon" }
+google-playServices = { id = "com.google.gms.google-services", version.ref = "google-play-services" }
+firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebase-crashlytics-plugin"}
+

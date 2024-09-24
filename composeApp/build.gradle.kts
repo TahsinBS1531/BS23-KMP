@@ -7,6 +7,8 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.google.playServices)
+//    id("com.google.gms.google-services")
 //    alias(libs.plugins.kspCompose)
 //    alias(libs.plugins.room)
 
@@ -41,6 +43,8 @@ kotlin {
             implementation(libs.androidx.compose.ui.tooling.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
+//            implementation(project.dependencies.platform(libs.firebase.bom))
+//            implementation(libs.firebase.crashlyticsKtx)
             //Room
 //            implementation(libs.room.runtime.android)
 
@@ -56,6 +60,8 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+            implementation(libs.androidx.lifecycle.viewmodel)
+            implementation(libs.androidx.lifecycle.runtime.compose)
 
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
@@ -80,6 +86,15 @@ kotlin {
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
             //Serialization
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.2")
+
+            //Firebase Authentication
+            implementation("dev.gitlive:firebase-auth:2.1.0")
+
+//            implementation("io.github.mirzemehdi:kmpauth-google:2.0.0") //Google One Tap Sign-In
+//            implementation("io.github.mirzemehdi:kmpauth-firebase:2.0.0") //Integrated Authentications with Firebase
+//            implementation("io.github.mirzemehdi:kmpauth-uihelper:2.0.0")
+//            implementation(project.dependencies.platform("com.google.firebase:firebase-bom:33.3.0"))
+//            implementation("com.google.firebase:firebase-analytics")
 
 
 
