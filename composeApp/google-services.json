@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "879320440325",
+    "project_id": "gpl-pharama",
+    "storage_bucket": "gpl-pharama.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:879320440325:android:4e2b64b79249468f3ec66c",
+        "android_client_info": {
+          "package_name": "com.bs23.msfa"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "879320440325-5nnguqu8bqirgamsk842asdk2kdmn57h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBnAJKQbfPf7fGBA-MZ3a4zj3sacvfV1NQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "879320440325-5nnguqu8bqirgamsk842asdk2kdmn57h.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "879320440325-iva405i9sja72s7ii64e55ca9220el2c.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.jetbrains.kmpapp.KMP-App-Template"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:879320440325:android:2d0dc9bf0c49d3f23ec66c",
+        "android_client_info": {
+          "package_name": "com.jetbrains.kmpapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "879320440325-5nnguqu8bqirgamsk842asdk2kdmn57h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBnAJKQbfPf7fGBA-MZ3a4zj3sacvfV1NQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "879320440325-5nnguqu8bqirgamsk842asdk2kdmn57h.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "879320440325-iva405i9sja72s7ii64e55ca9220el2c.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.jetbrains.kmpapp.KMP-App-Template"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
