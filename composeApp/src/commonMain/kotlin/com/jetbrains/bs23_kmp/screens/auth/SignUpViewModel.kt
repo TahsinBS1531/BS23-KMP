@@ -5,11 +5,9 @@ import com.jetbrains.bs23_kmp.core.base.viewmodel.MviViewModel
 import com.jetbrains.bs23_kmp.core.base.widget.BaseViewState
 import kotlinx.coroutines.launch
 
-class LoginViewModel(
-    private val authService: AuthService
-) :MviViewModel<BaseViewState<LoginUiState>, LoginEvent>() {
-
-    private var data = LoginUiState()
+class SignUpViewModel(private val authService: AuthService):
+    MviViewModel<BaseViewState<SignUpUIState>, SignUpEvent>() {
+        private var data = SignUpUIState()
 
     init {
         setState(BaseViewState.Data(data))
@@ -25,16 +23,12 @@ class LoginViewModel(
         }
     }
 
-    override fun onTriggerEvent(eventType: LoginEvent) {
+    override fun onTriggerEvent(eventType: SignUpEvent) {
         when (eventType) {
-            is LoginEvent.Login -> onSignInClick(eventType.email, eventType.password)
-            is LoginEvent.Logout -> onSignOut()
-            is LoginEvent.onEmailChange -> onEmailChange(eventType.newData)
-            is LoginEvent.onPasswordChange -> onPasswordChange(eventType.newData)
-            is LoginEvent.onSignUp -> createNewUser(eventType.email, eventType.password)
-            else -> {
+            is SignUpEvent.onSignUp -> createNewUser(eventType.email, eventType.password)
+            is SignUpEvent.onEmailChange -> onEmailChange(eventType.newData)
+            is SignUpEvent.onPasswordChange -> onPasswordChange(eventType.newData)
 
-            }
         }
     }
 
@@ -65,7 +59,7 @@ class LoginViewModel(
         return isValid
     }
 
-    fun onSignInClick(email: String, password: String) {
+    fun createNewUser(email: String, password: String) {
         if (!validateInput()) return
 
         viewModelScope.launch {
@@ -73,45 +67,20 @@ class LoginViewModel(
             setState(BaseViewState.Data(data))
 
             try {
-                val res = authService.authenticate(email, password)
-                if (authService.isAuthenticated) {
-                    data = data.copy(isLoginSuccess = true)
-                } else {
-                    data = data.copy(isLoginFailed = true)
-                }
+                authService.createUser(email, password)
+
             } catch (e: Exception) {
                 data = data.copy(
-                    isLoginFailed = true,
-                    loginErrorMessage = e.message ?: "Authentication failed"
+                    isSignUpFailed = true,
+                    signUpErrorMsg = e.message ?: "User creation failed"
                 )
+                setState(BaseViewState.Data(data))
             } finally {
                 data = data.copy(isProcessing = false)
                 setState(BaseViewState.Data(data))
             }
         }
     }
-
-    fun createNewUser(email: String, password: String) {
-
-        if (!validateInput()) return
-
-        viewModelScope.launch {
-            try {
-                authService.createUser(email, password)
-            } catch (e: Exception) {
-                // Handle user creation errors
-                data = data.copy(loginErrorMessage = e.message ?: "User creation failed")
-                setState(BaseViewState.Data(data))
-            }
-        }
-    }
-
-    fun onSignOut() {
-        viewModelScope.launch {
-            authService.signOut()
-        }
-    }
-
 
     fun isValidEmail(email: String): Boolean {
         val emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$"
@@ -121,5 +90,6 @@ class LoginViewModel(
     fun isValidPassword(password: String): Boolean {
         return password.length >= 6
     }
+
 
 }

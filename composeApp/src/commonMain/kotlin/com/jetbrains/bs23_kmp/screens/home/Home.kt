@@ -1,10 +1,10 @@
 package com.jetbrains.bs23_kmp.screens.home
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -12,7 +12,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.jetbrains.bs23_kmp.core.base.widget.BaseViewState
@@ -30,7 +29,8 @@ fun HomeScreen(navController: NavController, loginViewModel: LoginViewModel) {
         modifier = Modifier,
         uiState = uiState,
         onEvent = { loginViewModel.onTriggerEvent(it) },
-        navController)
+        navController
+    )
 
 }
 
@@ -70,18 +70,39 @@ fun HomeScreenContent(
     onEvent: (LoginEvent) -> Unit,
     navController: NavController
 ) {
+    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.Start) {
+        Column (modifier =Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End){
+            TextButton(onClick = {
+                navController.navigate("login")
+                onEvent(LoginEvent.Logout)
+            }){
+                Text("Log Out", style = MaterialTheme.typography.titleMedium)
+            }
 
-    Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
-        Text("Login Successful", color = Color.Green.copy(alpha = 0.5f))
-        Text("Logged In auth.User ID: ")
-        Text("${homeState.currentUser?.id}")
-        Text("Email: ${homeState.email}")
-
-        TextButton(contentPadding = PaddingValues(0.dp), onClick = {
-            onEvent(LoginEvent.Logout)
-        }) {
-            Text("Log Out")
         }
+//        Text("Login Successful", color = Color.Green.copy(alpha = 0.5f))
+//        Text("Logged In auth.User ID: ")
+//        Text("${homeState.currentUser?.id}")
+//        Text("Email: ${homeState.currentUser?.email}")
+//        Text("Name: ${homeState.currentUser?.displayName}")
+//        Text("Phone: ${homeState.currentUser?.phoneNumber}")
+//        Text("MetaData: ${homeState.currentUser?.metaData}")
+//
+//        TextButton(contentPadding = PaddingValues(0.dp), onClick = {
+//            onEvent(LoginEvent.Logout)
+//            navController.navigate("login")
+//        }) {
+//            Text("Log Out")
+//        }
+        MapComponent(homeState.currentUser?.email.toString())
     }
-
 }
+
+@Composable
+expect fun MapComponent(email: String)
+
+//data class  Location(val latitude:Double,val longitude:Double)
+//
+//expect class LocationService() {
+//    suspend fun getCurrentLocation(): Location
+//}

@@ -5,6 +5,7 @@ sealed class LoginEvent {
     object Logout : LoginEvent()
     data class onEmailChange(val newData :String) : LoginEvent()
     data class onPasswordChange(val newData:String) : LoginEvent()
+    data class onSignUp(val email: String, val password: String) : LoginEvent()
 
 }
 
@@ -17,4 +18,5 @@ data class LoginUiState(
     val isLoginSuccess: Boolean = false,
     val isLoginFailed: Boolean = false,
     val currentUser: User? = null,
+    val loginErrorMessage: String = ""
 )

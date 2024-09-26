@@ -43,10 +43,13 @@ kotlin {
             implementation(libs.androidx.compose.ui.tooling.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
-//            implementation(project.dependencies.platform(libs.firebase.bom))
-//            implementation(libs.firebase.crashlyticsKtx)
-            //Room
-//            implementation(libs.room.runtime.android)
+            //Google Maps
+            implementation("com.google.maps.android:maps-compose:2.9.0")
+            implementation("com.google.android.gms:play-services-location:21.0.1")
+            implementation("com.google.android.gms:play-services-maps:18.0.2")
+            implementation(libs.firebase.bom)
+            implementation(libs.google.accompanist.permissions)
+
 
         }
         iosMain.dependencies {
@@ -89,13 +92,11 @@ kotlin {
 
             //Firebase Authentication
             implementation("dev.gitlive:firebase-auth:2.1.0")
+            implementation("dev.gitlive:firebase-firestore:2.1.0")
 
-//            implementation("io.github.mirzemehdi:kmpauth-google:2.0.0") //Google One Tap Sign-In
-//            implementation("io.github.mirzemehdi:kmpauth-firebase:2.0.0") //Integrated Authentications with Firebase
-//            implementation("io.github.mirzemehdi:kmpauth-uihelper:2.0.0")
-//            implementation(project.dependencies.platform("com.google.firebase:firebase-bom:33.3.0"))
-//            implementation("com.google.firebase:firebase-analytics")
 
+            //Permission Handling
+            implementation("dev.icerock.moko:permissions:0.18.0")
 
 
 
@@ -104,7 +105,7 @@ kotlin {
 }
 
 buildscript {
-    repositories{
+    repositories {
         mavenCentral()
     }
 }
@@ -159,4 +160,6 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.androidx.lifecycle.livedata.core.ktx)
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    //For moko maps
 }

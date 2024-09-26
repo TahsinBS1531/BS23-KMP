@@ -12,6 +12,8 @@ import androidx.navigation.compose.rememberNavController
 import com.jetbrains.bs23_kmp.screens.auth.AuthServiceImpl
 import com.jetbrains.bs23_kmp.screens.auth.LoginScreen1
 import com.jetbrains.bs23_kmp.screens.auth.LoginViewModel
+import com.jetbrains.bs23_kmp.screens.auth.SignUp
+import com.jetbrains.bs23_kmp.screens.auth.SignUpViewModel
 import com.jetbrains.bs23_kmp.screens.components.SearchScreen
 import com.jetbrains.bs23_kmp.screens.detail.DetailScreen
 import com.jetbrains.bs23_kmp.screens.home.HomeScreen
@@ -25,6 +27,7 @@ fun App() {
     MaterialTheme{
         Surface {
             val loginViewModel = LoginViewModel(AuthServiceImpl(auth = Firebase.auth))
+            val signUpViewModel = SignUpViewModel(AuthServiceImpl(auth = Firebase.auth))
 
             val navController: NavHostController = rememberNavController()
             NavHost(
@@ -39,10 +42,15 @@ fun App() {
                     LoginScreen1(onLoginSuccess = {}, viewModel = loginViewModel,navController)
                 }
 
+                composable("signup"){
+                    SignUp(onLoginSuccess = {}, viewModel = signUpViewModel, navController)
+                }
+
                 composable("home") {
 //                    LoginScreen(modifier = Modifier.fillMaxSize().padding(16.dp))
                     HomeScreen(navController,loginViewModel)
                 }
+
                 composable("form"){
                     SearchScreen(modifier = Modifier.fillMaxSize())
                 }

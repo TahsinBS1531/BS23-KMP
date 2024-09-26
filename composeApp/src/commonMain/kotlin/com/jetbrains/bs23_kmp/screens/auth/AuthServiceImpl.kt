@@ -20,19 +20,22 @@ class AuthServiceImpl(
         get() = auth.currentUser != null && auth.currentUser?.isAnonymous == false
 
     override val currentUser: Flow<User> =
-        auth.authStateChanged.map { it?.let { User(it.uid, it.isAnonymous) } ?: User() }
+        auth.authStateChanged.map { it?.let { User(it.uid, it.isAnonymous,it.displayName,it.phoneNumber,it.email,it.metaData) } ?: User() }
 
-    private suspend fun launchWithAwait(block : suspend  () -> Unit) {
+    private suspend fun launchWithAwait(block: suspend () -> Unit) {
         scope.async {
             block()
         }.await()
     }
+
     override suspend fun authenticate(email: String, password: String) {
         launchWithAwait {
             auth.signInWithEmailAndPassword(email, password)
         }
     }
+
     override suspend fun createUser(email: String, password: String) {
+
         val result = launchWithAwait {
             auth.createUserWithEmailAndPassword(email, password)
         }
