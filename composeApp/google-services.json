@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:879320440325:android:4e2b64b79249468f3ec66c",
         "android_client_info": {
-          "package_name": "com.bs23.msfa"
+          "package_name": "com.bs23.bs23_kmp"
         }
       },
       "oauth_client": [
@@ -45,7 +45,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:879320440325:android:2d0dc9bf0c49d3f23ec66c",
         "android_client_info": {
-          "package_name": "com.jetbrains.kmpapp"
+          "package_name": "com.jetbrains.bs23_kmp"
         }
       },
       "oauth_client": [

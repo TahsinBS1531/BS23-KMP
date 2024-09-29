@@ -73,13 +73,14 @@ fun HomeScreenContent(
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.Start) {
         Column (modifier =Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End){
             TextButton(onClick = {
-                navController.navigate("login")
                 onEvent(LoginEvent.Logout)
+                navController.navigate("login")
             }){
                 Text("Log Out", style = MaterialTheme.typography.titleMedium)
             }
 
         }
+//        MapScreen1(onNavigation = {}, homeState.currentUser?.email.toString())
 //        Text("Login Successful", color = Color.Green.copy(alpha = 0.5f))
 //        Text("Logged In auth.User ID: ")
 //        Text("${homeState.currentUser?.id}")
@@ -94,12 +95,14 @@ fun HomeScreenContent(
 //        }) {
 //            Text("Log Out")
 //        }
-        MapComponent(homeState.currentUser?.email.toString())
+
+
+//        MapComponent(homeState.currentUser?.email.toString())
     }
 }
 
-@Composable
-expect fun MapComponent(email: String)
+//@Composable
+//expect fun MapComponent(email: String)
 
 //data class  Location(val latitude:Double,val longitude:Double)
 //

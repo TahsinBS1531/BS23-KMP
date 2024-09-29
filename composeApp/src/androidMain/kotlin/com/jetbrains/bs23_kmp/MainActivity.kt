@@ -1,9 +1,8 @@
-package com.jetbrains.kmpapp
+package com.jetbrains.bs23_kmp
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.jetbrains.bs23_kmp.App
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.initialize
 

@@ -51,6 +51,7 @@ fun LoginScreen1(
 
     val uiState by viewModel.uiState.collectAsState()
 
+
     LoginScreenBody(
         uiState = uiState,
         onEvent = { viewModel.onTriggerEvent(it) },
@@ -170,7 +171,7 @@ fun LoginScreenContent(
 
             Spacer(modifier = Modifier.height(16.dp))
             AnimatedVisibility(uiState.currentUser != null && !uiState.currentUser.isAnonymous) {
-                navController.navigate("home")
+                navController.navigate("home/${uiState.currentUser?.email}")
 
             }
         }

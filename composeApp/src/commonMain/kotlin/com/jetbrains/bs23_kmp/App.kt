@@ -16,7 +16,8 @@ import com.jetbrains.bs23_kmp.screens.auth.SignUp
 import com.jetbrains.bs23_kmp.screens.auth.SignUpViewModel
 import com.jetbrains.bs23_kmp.screens.components.SearchScreen
 import com.jetbrains.bs23_kmp.screens.detail.DetailScreen
-import com.jetbrains.bs23_kmp.screens.home.HomeScreen
+import com.jetbrains.bs23_kmp.screens.home.HomeViewModel
+import com.jetbrains.bs23_kmp.screens.home.MapScreen1
 import com.jetbrains.bs23_kmp.screens.list.ListScreen
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.auth
@@ -27,6 +28,7 @@ fun App() {
     MaterialTheme{
         Surface {
             val loginViewModel = LoginViewModel(AuthServiceImpl(auth = Firebase.auth))
+            val homeViewModel = HomeViewModel(AuthServiceImpl(auth = Firebase.auth))
             val signUpViewModel = SignUpViewModel(AuthServiceImpl(auth = Firebase.auth))
 
             val navController: NavHostController = rememberNavController()
@@ -46,9 +48,12 @@ fun App() {
                     SignUp(onLoginSuccess = {}, viewModel = signUpViewModel, navController)
                 }
 
-                composable("home") {
+                composable("home/{email}") {
 //                    LoginScreen(modifier = Modifier.fillMaxSize().padding(16.dp))
-                    HomeScreen(navController,loginViewModel)
+//                    HomeScreen(navController,loginViewModel)
+                    it.arguments?.getString("email")?.let { email ->
+                        MapScreen1(onNavigation = {},email = email,navController, homeViewModel)
+                    }
                 }
 
                 composable("form"){
