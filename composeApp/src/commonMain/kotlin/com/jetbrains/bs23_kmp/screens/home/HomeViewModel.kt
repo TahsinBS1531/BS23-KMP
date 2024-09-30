@@ -32,7 +32,14 @@ class HomeViewModel (private val authService: AuthService): MviViewModel<BaseVie
             is HomeScreenEvent.updateSelectionTab -> updateSelectedTab(eventType.index)
             is HomeScreenEvent.updateStartTime -> updateStartTime(eventType.time)
             HomeScreenEvent.SignOut -> MapLogOut()
+            HomeScreenEvent.resetState -> resetState()
         }
+    }
+
+
+    private fun resetState() {
+        _uiState = HomeSceenState()
+        setState(BaseViewState.Data(_uiState))
     }
 
     private fun updateLocation(newLocation: CoordinatesData) {
@@ -59,6 +66,8 @@ class HomeViewModel (private val authService: AuthService): MviViewModel<BaseVie
     }
 
     private fun showLocationHistory(email: String) {
+        _uiState = _uiState.copy(historyLoader = true)
+        setState(BaseViewState.Data(_uiState))
         FetchTrackedLocations(email) { result ->
             _uiState = _uiState.copy(
                 trackHistory = result.map { item ->
@@ -77,8 +86,11 @@ class HomeViewModel (private val authService: AuthService): MviViewModel<BaseVie
                     )
                 }
             )
+            println("Track History From viewModel : ${_uiState.trackHistory}")
             setState(BaseViewState.Data(_uiState))
         }
+        _uiState = _uiState.copy(historyLoader = false)
+        setState(BaseViewState.Data(_uiState))
     }
 
     private fun deleteDocument(email: String, documentId: String) {
@@ -126,10 +138,13 @@ class HomeViewModel (private val authService: AuthService): MviViewModel<BaseVie
     fun MapLogOut(){
         viewModelScope.launch {
             authService.signOut()
+            _uiState= _uiState.copy(isSignedOut = true)
+            setState(BaseViewState.Data(_uiState))
         }
     }
 
 }
+
 
 data class HistoryItemFirestore1(
     val title: String = "",
@@ -139,14 +154,6 @@ data class HistoryItemFirestore1(
     val endTime: String = "",
 )
 
-//data class HistoryItem1(
-//    var id: String = "",
-//    val title: String,
-//    val description: String,
-//    val startTime: String,
-//    val endTime: String,
-//    val locations: List<CoordinatesData>,
-//)
 
 expect fun DeleteDocumentFromFirebase(email: String, documentId: String)
 

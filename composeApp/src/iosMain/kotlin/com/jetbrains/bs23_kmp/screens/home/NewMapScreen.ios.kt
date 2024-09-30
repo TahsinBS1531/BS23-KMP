@@ -1,10 +1,13 @@
 package com.jetbrains.bs23_kmp.screens.home
 
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.navigation.NavController
 
 @Composable
 actual fun MapTourPage(
+    modifier: Modifier ,
     isTracking: Boolean,
     currentLocation: CoordinatesData?,
     trackedLocations: List<CoordinatesData>,
@@ -17,7 +20,9 @@ actual fun MapTourPage(
     onStartTime: (String) -> Unit,
     onEndTime: (String) -> Unit,
     startTime: String,
-    endTime: String
+    endTime: String,
+    email:String,
+    navController: NavController
 ) {
 }
 
@@ -31,6 +36,7 @@ actual fun MapWithLoactionTracking1() {
 
 @Composable
 actual fun MapWithLocationTracking1(
+    modifier: Modifier,
     isTracking: Boolean,
     currentLocation: CoordinatesData?,
     onLocationUpdate: (CoordinatesData) -> Unit,
@@ -53,4 +59,8 @@ actual fun GradientPolyline1(
     endColor: Color,
     width: Float
 ) {
+}
+
+actual fun GetLocationName(item: CoordinatesData): String {
+
 }

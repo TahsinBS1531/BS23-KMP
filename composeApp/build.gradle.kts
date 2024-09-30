@@ -94,9 +94,11 @@ kotlin {
             implementation("dev.gitlive:firebase-auth:2.1.0")
             implementation("dev.gitlive:firebase-firestore:2.1.0")
 
-
             //Permission Handling
             implementation("dev.icerock.moko:permissions:0.18.0")
+
+            //lottie for KMP
+            implementation("io.github.ismai117:kottie:2.0.0")
 
 
 
@@ -159,6 +161,7 @@ dependencies {
     implementation(libs.androidx.annotation.jvm)
     implementation(libs.play.services.location)
     implementation(libs.androidx.lifecycle.livedata.core.ktx)
+    implementation(libs.androidx.foundation.android)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     //For moko maps

@@ -3,11 +3,13 @@ package com.jetbrains.bs23_kmp.screens.auth
 import androidx.lifecycle.viewModelScope
 import com.jetbrains.bs23_kmp.core.base.viewmodel.MviViewModel
 import com.jetbrains.bs23_kmp.core.base.widget.BaseViewState
+import dev.gitlive.firebase.auth.FirebaseUser
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class SignUpViewModel(private val authService: AuthService):
+class SignUpViewModel(private val authService: AuthService) :
     MviViewModel<BaseViewState<SignUpUIState>, SignUpEvent>() {
-        private var data = SignUpUIState()
+    private var data = SignUpUIState()
 
     init {
         setState(BaseViewState.Data(data))
@@ -28,8 +30,14 @@ class SignUpViewModel(private val authService: AuthService):
             is SignUpEvent.onSignUp -> createNewUser(eventType.email, eventType.password)
             is SignUpEvent.onEmailChange -> onEmailChange(eventType.newData)
             is SignUpEvent.onPasswordChange -> onPasswordChange(eventType.newData)
-
+            is SignUpEvent.isEmailVerified -> checkIfEmailIsVerified()
+            is SignUpEvent.resetState -> resetState()
         }
+    }
+
+    private fun resetState() {
+        data = SignUpUIState()
+        setState(BaseViewState.Data(data))
     }
 
     private fun onEmailChange(newValue: String) {
@@ -68,6 +76,12 @@ class SignUpViewModel(private val authService: AuthService):
 
             try {
                 authService.createUser(email, password)
+                authService.sendVerificationEmail()
+                data = data.copy(
+                    isEmailSent = true,
+                )
+                setState(BaseViewState.Data(data))
+                pollForEmailVerification()
 
             } catch (e: Exception) {
                 data = data.copy(
@@ -79,6 +93,7 @@ class SignUpViewModel(private val authService: AuthService):
                 data = data.copy(isProcessing = false)
                 setState(BaseViewState.Data(data))
             }
+//            checkIfEmailIsVerified()
         }
     }
 
@@ -89,6 +104,75 @@ class SignUpViewModel(private val authService: AuthService):
 
     fun isValidPassword(password: String): Boolean {
         return password.length >= 6
+    }
+
+    fun checkIfEmailIsVerified() {
+        viewModelScope.launch {
+            val currentUser = authService.currentUser
+            val isVerified = authService.isEmailVerified()
+            if (isVerified) {
+                data = data.copy(
+                    isSignUpSuccess = true,
+                    signUpMsg = "Email verified. Sign-up successful! Please Wait for Redirecting to Home Page",
+                    isEmailSent = false,
+                    email = "",
+                    password = ""
+                )
+                setState(BaseViewState.Data(data))
+            } else {
+                data = data.copy(
+                    isSignUpFailed = true,
+                    signUpErrorMsg = "Email not verified. Please check your inbox."
+                )
+                setState(BaseViewState.Data(data))
+            }
+//            deleteUserIfUnverified(currentUser)
+        }
+    }
+
+    private fun pollForEmailVerification() {
+        viewModelScope.launch {
+            var isVerified = false
+            while (!isVerified) {
+                delay(5000) // Check every 5 seconds
+                isVerified = authService.isEmailVerified()
+                if (isVerified) {
+                    data = data.copy(
+                        isSignUpSuccess = true,
+                        signUpMsg = "Email verified. Sign-up successful! Please Wait for Redirecting to Home Page",
+                        isEmailSent = false,
+                        email = "",
+                        password = ""
+                    )
+                    setState(BaseViewState.Data(data))
+                    break
+                }
+            }
+        }
+    }
+
+
+    // Function to delete user if not verified
+    private fun deleteUserIfUnverified(user: FirebaseUser?) {
+        user?.let {
+            if (!it.isEmailVerified) {
+                viewModelScope.launch {
+                    try {
+                        it.delete()
+                        data = data.copy(
+                            signUpErrorMsg = "User deleted as email verification was not completed."
+                        )
+                        setState(BaseViewState.Data(data))
+                    } catch (e: Exception) {
+                        // Handle any failure during deletion
+                        data = data.copy(
+                            signUpErrorMsg = e.message ?: "Failed to delete unverified user."
+                        )
+                        setState(BaseViewState.Data(data))
+                    }
+                }
+            }
+        }
     }
 
 

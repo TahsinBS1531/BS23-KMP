@@ -1,6 +1,6 @@
 package com.jetbrains.bs23_kmp.screens.auth
 
-import androidx.compose.animation.AnimatedVisibility
+import KottieAnimation
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -26,8 +27,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -40,7 +45,13 @@ import androidx.navigation.NavController
 import com.jetbrains.bs23_kmp.core.base.widget.BaseViewState
 import com.jetbrains.bs23_kmp.core.base.widget.EmptyView
 import com.jetbrains.bs23_kmp.core.base.widget.LoadingView
+import contentScale.ContentScale
+import kmp_app_template.composeapp.generated.resources.Res
+import kottieComposition.KottieCompositionSpec
+import kottieComposition.animateKottieCompositionAsState
+import kottieComposition.rememberKottieComposition
 import org.jetbrains.compose.resources.ExperimentalResourceApi
+import utils.KottieConstants
 
 @Composable
 fun LoginScreen1(
@@ -96,14 +107,46 @@ fun LoginScreenContent(
     navController: NavController
 ) {
 
+
+    var animation by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        animation = Res.readBytes("files/lottie3.json").decodeToString()
+    }
+
+    val composition = rememberKottieComposition(
+        spec = KottieCompositionSpec.File(animation) // Or KottieCompositionSpec.Url || KottieCompositionSpec.JsonString
+    )
+
+    var playing by remember { mutableStateOf(true) }
+
+    val animationState by animateKottieCompositionAsState(
+        composition = composition,
+//        isPlaying = playing,
+        reverseOnRepeat = true,
+        iterations = KottieConstants.IterateForever
+    )
+
     Box(
         modifier = modifier.fillMaxWidth(),
     ) {
-        LoginTitle(
-            modifier = Modifier.fillMaxWidth().align(Alignment.TopStart).padding(top = 46.dp),
-            title = "Welcome,",
-            subtitle = "Sign in to continue!"
-        )
+        Column(
+            modifier = Modifier.fillMaxWidth().align(Alignment.TopStart),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+        ) {
+            LoginTitle(
+                modifier = Modifier.fillMaxWidth(),
+                title = "Welcome,",
+                subtitle = "Sign in to continue!"
+            )
+            KottieAnimation(
+                composition = composition,
+                progress = { animationState.progress },
+                modifier = Modifier.size(150.dp),
+                contentScale = ContentScale.Crop
+            )
+        }
 
         Column(
             modifier = Modifier.fillMaxWidth().align(Alignment.Center)
@@ -111,13 +154,14 @@ fun LoginScreenContent(
             verticalArrangement = Arrangement.spacedBy(24.dp),
             horizontalAlignment = Alignment.Start
         ) {
-            LoginTextField(modifier = Modifier.fillMaxWidth().border(
-                BorderStroke(
-                    1.dp, Brush.linearGradient(
-                        listOf(Color(0XFFfa568f), Color(0XFFfda78f))
-                    )
-                ), shape = RoundedCornerShape(8.dp)
-            ), value = uiState.email,
+            LoginTextField(
+                modifier = Modifier.fillMaxWidth().border(
+                    BorderStroke(
+                        1.dp, Brush.linearGradient(
+                            listOf(Color(0XFFfa568f), Color(0XFFfda78f))
+                        )
+                    ), shape = RoundedCornerShape(8.dp)
+                ), value = uiState.email,
                 label = "Email",
                 onValueChange = {
                     onEvent(LoginEvent.onEmailChange(it))
@@ -131,13 +175,14 @@ fun LoginScreenContent(
                     color = MaterialTheme.colorScheme.error
                 )
             }
-            LoginTextField(modifier = Modifier.fillMaxWidth().border(
-                BorderStroke(
-                    1.dp, Brush.linearGradient(
-                        listOf(Color(0XFFfa568f), Color(0XFFfda78f))
-                    )
-                ), shape = RoundedCornerShape(8.dp)
-            ), value = uiState.password,
+            LoginTextField(
+                modifier = Modifier.fillMaxWidth().border(
+                    BorderStroke(
+                        1.dp, Brush.linearGradient(
+                            listOf(Color(0XFFfa568f), Color(0XFFfda78f))
+                        )
+                    ), shape = RoundedCornerShape(8.dp)
+                ), value = uiState.password,
                 label = "Password",
                 onValueChange = {
                     onEvent(LoginEvent.onPasswordChange(it))
@@ -160,8 +205,11 @@ fun LoginScreenContent(
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
             } else {
-                LoginButton(modifier =Modifier.fillMaxWidth(), onButtonClick = {
+                LoginButton(modifier = Modifier.fillMaxWidth(), onButtonClick = {
                     onEvent(LoginEvent.Login(uiState.email, uiState.password))
+//                    if(uiState.currentUser != null && !uiState.currentUser.isAnonymous) {
+//                        navController.navigate("home/${uiState.currentUser?.email}")
+//                    }
                 }, buttonText = "Sign in")
             }
 
@@ -170,10 +218,19 @@ fun LoginScreenContent(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            AnimatedVisibility(uiState.currentUser != null && !uiState.currentUser.isAnonymous) {
-                navController.navigate("home/${uiState.currentUser?.email}")
+            println("Current user from uiState : ${uiState.currentUser}")
 
+            LaunchedEffect(uiState.currentUser?.email) {
+                if (uiState.currentUser?.email != null && !uiState.currentUser.isAnonymous) {
+                    navController.navigate("home/${uiState.currentUser.email}") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
             }
+//            AnimatedVisibility(uiState.currentUser?.email != null && !uiState.currentUser.isAnonymous) {
+//                navController.navigate("home/${uiState.currentUser?.email}")
+//
+//            }
         }
 
         Row(
@@ -245,8 +302,14 @@ fun LoginTextField(
         )
     )
 }
+
 @Composable
-fun LoginButton(modifier: Modifier =Modifier, onButtonClick:()->Unit,buttonText:String ="") {
+fun LoginButton(
+    modifier: Modifier = Modifier,
+    onButtonClick: () -> Unit,
+    buttonText: String = "",
+    enabled: Boolean = true
+) {
     Button(
         modifier = modifier.fillMaxWidth().height(48.dp).background(
             Brush.linearGradient(
@@ -259,7 +322,8 @@ fun LoginButton(modifier: Modifier =Modifier, onButtonClick:()->Unit,buttonText:
         },
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
-        )
+        ),
+        enabled = enabled,
     )
     {
         Text(buttonText)

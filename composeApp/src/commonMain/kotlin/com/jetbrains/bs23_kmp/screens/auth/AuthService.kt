@@ -13,4 +13,8 @@ interface AuthService {
     suspend fun createUser(email: String, password: String)
 
     suspend fun signOut()
+
+    suspend fun sendVerificationEmail()
+
+    suspend fun isEmailVerified(): Boolean
 }

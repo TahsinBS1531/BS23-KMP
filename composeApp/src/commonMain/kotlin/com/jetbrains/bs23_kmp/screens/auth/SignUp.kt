@@ -1,6 +1,5 @@
 package com.jetbrains.bs23_kmp.screens.auth
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -18,7 +17,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -35,6 +33,7 @@ import androidx.navigation.NavController
 import com.jetbrains.bs23_kmp.core.base.widget.BaseViewState
 import com.jetbrains.bs23_kmp.core.base.widget.EmptyView
 import com.jetbrains.bs23_kmp.core.base.widget.LoadingView
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 @Composable
@@ -105,13 +104,14 @@ fun SignUpScreenContent(
             verticalArrangement = Arrangement.spacedBy(24.dp),
             horizontalAlignment = Alignment.Start
         ) {
-            LoginTextField(modifier = Modifier.fillMaxWidth().border(
-                BorderStroke(
-                    1.dp, Brush.linearGradient(
-                        listOf(Color(0XFFfa568f), Color(0XFFfda78f))
-                    )
-                ), shape = RoundedCornerShape(8.dp)
-            ), value = uiState.email,
+            LoginTextField(
+                modifier = Modifier.fillMaxWidth().border(
+                    BorderStroke(
+                        1.dp, Brush.linearGradient(
+                            listOf(Color(0XFFfa568f), Color(0XFFfda78f))
+                        )
+                    ), shape = RoundedCornerShape(8.dp)
+                ), value = uiState.email,
                 label = "Email ID",
                 onValueChange = {
                     onEvent(SignUpEvent.onEmailChange(it))
@@ -125,13 +125,14 @@ fun SignUpScreenContent(
                     color = MaterialTheme.colorScheme.error
                 )
             }
-            LoginTextField(modifier = Modifier.fillMaxWidth().border(
-                BorderStroke(
-                    1.dp, Brush.linearGradient(
-                        listOf(Color(0XFFfa568f), Color(0XFFfda78f))
-                    )
-                ), shape = RoundedCornerShape(8.dp)
-            ), value = uiState.password,
+            LoginTextField(
+                modifier = Modifier.fillMaxWidth().border(
+                    BorderStroke(
+                        1.dp, Brush.linearGradient(
+                            listOf(Color(0XFFfa568f), Color(0XFFfda78f))
+                        )
+                    ), shape = RoundedCornerShape(8.dp)
+                ), value = uiState.password,
                 label = "Password",
                 onValueChange = {
                     onEvent(SignUpEvent.onPasswordChange(it))
@@ -154,24 +155,58 @@ fun SignUpScreenContent(
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
             } else {
-                LoginButton(modifier =Modifier.fillMaxWidth(), onButtonClick = {
+                LoginButton(modifier = Modifier.fillMaxWidth(), onButtonClick = {
                     onEvent(SignUpEvent.onSignUp(uiState.email, uiState.password))
-                }, buttonText = "SIGN UP")
+//                    onEvent(SignUpEvent.isEmailVerified)
+                }, buttonText = "SIGN UP", enabled = !uiState.isEmailSent)
             }
 
-            if (uiState.signUpErrorMsg.isNotEmpty()) {
-                Text(text = uiState.signUpErrorMsg, color = MaterialTheme.colorScheme.error)
+//            if (uiState.signUpErrorMsg.isNotEmpty()) {
+//                Text(text = uiState.signUpErrorMsg, color = MaterialTheme.colorScheme.error)
+//            }
+
+            if (uiState.isSignUpFailed) {
+                Text(
+                    text = uiState.signUpErrorMsg,
+                    color = MaterialTheme.colorScheme.error
+                )
             }
+
+            if (uiState.isEmailSent) {
+                Text(
+                    text = "Please check your email to verify your account",
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+
+            if (uiState.isSignUpSuccess) {
+                Text(
+                    text = uiState.signUpMsg,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            LaunchedEffect(uiState.isSignUpSuccess) {
+                if (uiState.isSignUpSuccess) {
+                    delay(5000)
+                    onEvent(SignUpEvent.resetState)
+                    navController.navigate("home/${uiState.currentUser?.email}") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
+            }
+
 
             Spacer(modifier = Modifier.height(16.dp))
-            AnimatedVisibility(uiState.currentUser != null && !uiState.currentUser.isAnonymous) {
-                Snackbar {
-                    Text("Sign up successful")
-                }
-                LaunchedEffect(Unit) {
-                    navController.navigate("home")
-                }
-            }
+//            AnimatedVisibility(uiState.currentUser != null && !uiState.currentUser.isAnonymous && uiState.isSignUpSuccess) {
+//                Snackbar {
+//                    Text("Sign up successful")
+//                }
+//                LaunchedEffect(Unit) {
+//                    navController.navigate("home/${uiState.currentUser?.email}")
+//                }
+//            }
         }
 
         Row(

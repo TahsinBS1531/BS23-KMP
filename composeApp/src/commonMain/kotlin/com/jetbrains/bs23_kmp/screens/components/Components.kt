@@ -43,16 +43,19 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 fun FormWithTabRow(titles: List<String>, tabContents: List<@Composable () -> Unit>) {
     var selectedTabIndex by remember { mutableStateOf(0) }
 
-    Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.secondaryContainer)) {
+    Column(
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.secondaryContainer)
+    ) {
         TabRow(
             selectedTabIndex = selectedTabIndex,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             divider = {},
-            indicator = {tabPositions ->
+            indicator = { tabPositions ->
                 TabRowDefaults.Indicator(
-                    Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]).padding(start = 12.dp, end = 12.dp),
+                    Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex])
+                        .padding(start = 12.dp, end = 12.dp),
                     color = MaterialTheme.colorScheme.primary
                 )
             },
@@ -104,7 +107,7 @@ fun FormWithTabRowPreview() {
             titles = listOf("General", "Advanced", "Media & Data", "Messages"),
             tabContents = listOf({ AppFormCard() },
                 { Text("This is an Advanced Tab") },
-                { Text("This is a Media & Data Tab")  },
+                { Text("This is a Media & Data Tab") },
                 { Text("This is a Messages Tab") })
         )
     }
@@ -113,7 +116,10 @@ fun FormWithTabRowPreview() {
 
 @Composable
 fun AppFormCard(modifier: Modifier = Modifier, cardTitle: String = "Card Title") {
-    Card(modifier = modifier.fillMaxWidth(),colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -209,12 +215,12 @@ fun AppInputField(
         label = { Text(text = label, modifier = Modifier.fillMaxWidth()) },
         placeholder = { Text(text = placeholder) },
         shape = RoundedCornerShape(6.dp),
-        colors = TextFieldDefaults.textFieldColors(
+        colors = TextFieldDefaults.colors(
             focusedIndicatorColor = MaterialTheme.colorScheme.primary,
             unfocusedIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent,
             errorIndicatorColor = MaterialTheme.colorScheme.error,
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             cursorColor = MaterialTheme.colorScheme.primary,
         )
     )
@@ -250,12 +256,12 @@ fun AppLargeTextField() {
         onValueChange = {},
         placeholder = { Text(text = "Enter your description") },
         modifier = Modifier.fillMaxWidth().height(160.dp),
-        colors = TextFieldDefaults.textFieldColors(
+        colors = TextFieldDefaults.colors(
             focusedIndicatorColor = MaterialTheme.colorScheme.primary,
             unfocusedIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent,
             errorIndicatorColor = MaterialTheme.colorScheme.error,
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
             cursorColor = MaterialTheme.colorScheme.primary,
         )
     )

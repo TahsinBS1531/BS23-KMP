@@ -36,19 +36,27 @@ class AuthServiceImpl(
 
     override suspend fun createUser(email: String, password: String) {
 
-        val result = launchWithAwait {
+        launchWithAwait {
             auth.createUserWithEmailAndPassword(email, password)
         }
     }
 
     override suspend fun signOut() {
 
+//        auth.currentUser?.delete()
         if (auth.currentUser?.isAnonymous == true) {
             auth.currentUser?.delete()
         }
-
         auth.signOut()
+    }
 
-        //create  new user anonymous session
+    override suspend fun sendVerificationEmail() {
+        auth.currentUser?.sendEmailVerification()
+    }
+
+    override suspend fun isEmailVerified(): Boolean {
+        auth.currentUser?.reload().let {
+            return auth.currentUser?.isEmailVerified ?: false
+        }
     }
 }

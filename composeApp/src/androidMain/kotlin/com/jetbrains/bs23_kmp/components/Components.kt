@@ -227,12 +227,12 @@ fun AppInputField(
         label = { Text(text = label, modifier = Modifier.fillMaxWidth()) },
         placeholder = { Text(text = placeholder) },
         shape = RoundedCornerShape(6.dp),
-        colors = TextFieldDefaults.textFieldColors(
+        colors = TextFieldDefaults.colors(
             focusedIndicatorColor = MaterialTheme.colorScheme.primary,
             unfocusedIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent,
             errorIndicatorColor = MaterialTheme.colorScheme.error,
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             cursorColor = MaterialTheme.colorScheme.primary,
         )
     )
@@ -270,12 +270,12 @@ fun AppLargeTextField() {
         modifier = Modifier
             .fillMaxWidth()
             .height(160.dp),
-        colors = TextFieldDefaults.textFieldColors(
+        colors = TextFieldDefaults.colors(
             focusedIndicatorColor = MaterialTheme.colorScheme.primary,
             unfocusedIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent,
             errorIndicatorColor = MaterialTheme.colorScheme.error,
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             cursorColor = MaterialTheme.colorScheme.primary,
         )
     )

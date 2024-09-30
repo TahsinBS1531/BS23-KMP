@@ -5,21 +5,29 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
+import android.location.Geocoder
 import android.location.Location
 import android.net.Uri
 import android.provider.Settings
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -30,6 +38,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -37,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
+import androidx.navigation.NavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -67,6 +77,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -74,6 +85,7 @@ import java.util.Locale
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 actual fun MapTourPage(
+    modifier: Modifier,
     isTracking: Boolean,
     currentLocation: CoordinatesData?,
     trackedLocations: List<CoordinatesData>,
@@ -86,7 +98,9 @@ actual fun MapTourPage(
     onStartTime: (String) -> Unit,
     onEndTime: (String) -> Unit,
     startTime: String,
-    endTime: String
+    endTime: String,
+    email:String,
+    navController: NavController
 ) {
 
     val fusedLocationClient = rememberFusedLocationProviderClient()
@@ -103,19 +117,19 @@ actual fun MapTourPage(
 
     val timeFormatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
 
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        modifier = modifier.fillMaxSize(),
     ) {
+
+
         Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.Center
+            modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
         ) {
             if (locationPermissionState.status.isGranted) {
                 // Initially show the user's location, then update when tracking is active
                 currentLocation?.let {
                     MapWithLocationTracking1(
+                        modifier = Modifier.fillMaxSize(),
                         isTracking = isTracking,
                         currentLocation = currentLocation,
                         onLocationUpdate = onLocationUpdate,
@@ -129,73 +143,106 @@ actual fun MapTourPage(
         }
 
 
-//         Start and Stop buttons for location tracking
         Box(
             Modifier
-                .weight(.5f)
-                .fillMaxWidth(),
+                .clip(RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp))
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(24.dp)
+                .align(Alignment.BottomCenter),
         ) {
-
 
             Column(
                 modifier = Modifier
-                    .fillMaxWidth(.5f)
-                    .padding(top = 24.dp)
+                    .fillMaxWidth()
                     .align(Alignment.TopStart),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Tracked Locations: ${trackedLocations.size} Times")
-                Button(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    onClick = {
-                        onStartTracking()
-                        onStartTime(timeFormatter.format(Date()))
-                    }, // Start tracking
-                    enabled = !isTracking  // Disable the start button when tracking is active
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Start Tour")
+                    Text(
+                        "Start Time:",
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        )
+                    )
+                    Text(
+                        if (startTime.isNotEmpty()) startTime else "Not Started",
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 }
-                Text("Start Time: ${if (startTime.isNotEmpty()) startTime else "Not Started"}")
-            }
-
-            //VerticalDivider(modifier = Modifier.align(Alignment.Center))
-
-            Button(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(top = 24.dp, bottom = 48.dp),
-                onClick = { onToogleShowTrack(!isShowTrack) },
-            ) {
-                Text(if (isShowTrack) "Hide Last Tour Track" else "Show Last Tour Track")
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth(.5f)
-                    .padding(top = 24.dp)
-                    .align(Alignment.TopEnd),
-
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Tracking: ${if (isTracking) "Active" else "Inactive"}")
-                Button(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    onClick = {
-                        onStopTracking()
-                        onEndTime(timeFormatter.format(Date()))
-                    }, // Stop tracking and show the path
-                    enabled = isTracking  // Disable the stop button when tracking is inactive
+                HorizontalDivider()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("End Tour")
+                    Text(
+                        "End Time:",
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        )
+                    )
+                    Text(
+                        if (endTime.isNotEmpty()) endTime else "Not Started",
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 }
-                Text("End Time: ${if (endTime.isNotEmpty()) endTime else "Not Started Yet"}")
+                HorizontalDivider()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Tracked Locations:",
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        )
+                    )
+                    Text(
+                        trackedLocations.size.toString(),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                HorizontalDivider()
+                TextButton(onClick = {
+                    navController.navigate("history/$email")
+                }) {
+                    Text("Check History")
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        if (isTracking) {
+                            onStopTracking()
+                            onEndTime(timeFormatter.format(Date()))
+                        } else {
+                            onStartTracking()
+                            onStartTime(timeFormatter.format(Date()))
+                        }
+
+                    },
+                    border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
+                    colors = ButtonDefaults.buttonColors(containerColor = if (isTracking) Color.Transparent else MaterialTheme.colorScheme.primary),
+//                    enabled = !isTracking
+                ) {
+                    Text(
+                        text = if (isTracking) "End Tour" else "Start Tour",
+                        color = if (isTracking) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onPrimary,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
             }
+
 
         }
     }
@@ -213,18 +260,16 @@ actual fun MapLocationPermissionDenied() {
     ) {
         Text("Location permission required to show map.")
         Spacer(Modifier.height(16.dp))
-        Button(
-            onClick = {
-                // Open App Settings
-                val intent = Intent(
-                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                    Uri.fromParts("package", context.packageName, null)
-                ).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                context.startActivity(intent)  // Launch settings activity
+        Button(onClick = {
+            // Open App Settings
+            val intent = Intent(
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.fromParts("package", context.packageName, null)
+            ).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-        ) {
+            context.startActivity(intent)  // Launch settings activity
+        }) {
             Text("Open Settings")
         }
     }
@@ -233,6 +278,7 @@ actual fun MapLocationPermissionDenied() {
 
 @Composable
 actual fun MapWithLocationTracking1(
+    modifier: Modifier,
     isTracking: Boolean,
     currentLocation: CoordinatesData?,
     onLocationUpdate: (CoordinatesData) -> Unit,
@@ -250,8 +296,9 @@ actual fun MapWithLocationTracking1(
     }
 
     val cameraPositionState = rememberCameraPositionState {
-        position =
-            CameraPosition.fromLatLngZoom(converTedCurrentPosition ?: LatLng(23.42, 90.20), defaultZoom)
+        position = CameraPosition.fromLatLngZoom(
+            converTedCurrentPosition ?: LatLng(23.42, 90.20), defaultZoom
+        )
     }
 
     val context = LocalContext.current
@@ -278,16 +325,15 @@ actual fun MapWithLocationTracking1(
         //Request Interval Time
 
         val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000L)
-            .setWaitForAccurateLocation(true)
-            .build()
+            .setWaitForAccurateLocation(true).build()
 
         if (ActivityCompat.checkSelfPermission(
-                context,
-                "android.permission.ACCESS_FINE_LOCATION"
+                context, "android.permission.ACCESS_FINE_LOCATION"
             ) == 0
         ) {
             scope.launch {
                 fusedLocationClient.getLocationUpdates(locationRequest).collect {
+
                     onLocationUpdate(CoordinatesData(it.latitude, it.longitude))
                 }
             }
@@ -297,15 +343,14 @@ actual fun MapWithLocationTracking1(
     // Display the map and update camera position based on current location
 
     GoogleMap(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,
         onMapLoaded = {
             converTedCurrentPosition?.let {
                 scope.launch {
                     cameraPositionState.animate(
                         CameraUpdateFactory.newLatLngZoom(
-                            it,
-                            zoomLevel
+                            it, zoomLevel
                         ), // Maintain the same zoom level
                         durationMs = 500
                     )
@@ -325,14 +370,12 @@ actual fun MapWithLocationTracking1(
         )
         converTedCurrentPosition?.let {
             Marker(
-                state = MarkerState(position = it),
-                title = "Current Location",
-                icon = currentMarker
+                state = MarkerState(position = it), title = "Current Location", icon = currentMarker
             )
         }
 
-        // If tracking is stopped, show the path
         if (isShowTrack && trackedLocations?.size!! > 1) {
+
             convertedTrackedLocations?.let { points ->
                 GradientPolyline(
                     polylinePoints = points,
@@ -347,9 +390,7 @@ actual fun MapWithLocationTracking1(
             )
             convertedTrackedLocations?.firstOrNull()?.let { startPoint ->
                 Marker(
-                    state = MarkerState(position = startPoint),
-                    title = "Start",
-                    icon = startIcon
+                    state = MarkerState(position = startPoint), title = "Start", icon = startIcon
                 )
             }
 
@@ -358,19 +399,31 @@ actual fun MapWithLocationTracking1(
             )
             convertedTrackedLocations?.lastOrNull()?.let { endPoint ->
                 Marker(
-                    state = MarkerState(position = endPoint),
-                    title = "End",
-                    icon = endIcon
+                    state = MarkerState(position = endPoint), title = "End", icon = endIcon
                 )
             }
         }
     }
 }
 
+fun getLocationName(context: Context, lat: Double, lon: Double): String {
+    val geocoder = Geocoder(context, Locale.getDefault())
+    return try {
+        val addresses = geocoder.getFromLocation(lat, lon, 1)
+        if (!addresses.isNullOrEmpty()) {
+            addresses[0].getAddressLine(0) ?: "Unknown Location"
+        } else {
+            "Unknown Location"
+        }
+    } catch (e: IOException) {
+        "Location Unavailable"
+    }
+}
+
+
 @Composable
 actual fun TrackMap1(
-    modifier: Modifier,
-    trackPoints: List<CoordinatesData>
+    modifier: Modifier, trackPoints: List<CoordinatesData>
 ) {
     val context = LocalContext.current
     val converTedtrackPoints = trackPoints.map {
@@ -380,8 +433,7 @@ actual fun TrackMap1(
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(
             calculateMidpoint(
-                converTedtrackPoints.first(),
-                converTedtrackPoints.last()
+                converTedtrackPoints.first(), converTedtrackPoints.last()
             ), 10f
         )
     }
@@ -426,10 +478,7 @@ actual fun TrackMap1(
 
 @Composable
 actual fun GradientPolyline1(
-    polylinePoints: List<CoordinatesData>,
-    startColor: Color,
-    endColor: Color,
-    width: Float
+    polylinePoints: List<CoordinatesData>, startColor: Color, endColor: Color, width: Float
 ) {
 
     val segmentCount = polylinePoints.size - 1
@@ -451,20 +500,12 @@ actual fun GradientPolyline1(
     }
 }
 
-fun ConvertToLatLng(item:CoordinatesData):LatLng {
+fun ConvertToLatLng(item: CoordinatesData): LatLng {
     val lat = item.latitude
     val lng = item.longitude
     return LatLng(lat, lng)
 }
 
-fun convertToLatLngList(items:List<CoordinatesData>):List<LatLng> {
-    val latLngList = mutableListOf<LatLng>()
-    for (item in items) {
-        val latLng = LatLng(item.latitude, item.longitude)
-        latLngList.add(latLng)
-    }
-    return latLngList
-}
 
 @Suppress("MissingPermission")
 fun FusedLocationProviderClient.getLocationUpdates(locationRequest: LocationRequest): Flow<Location> =
@@ -501,9 +542,7 @@ fun Context.vectorToMapMarker(
     val drawable: Drawable = ContextCompat.getDrawable(this, vectorResId) ?: return null
 
     val bitmap = Bitmap.createBitmap(
-        drawable.intrinsicWidth,
-        drawable.intrinsicHeight,
-        Bitmap.Config.ARGB_8888
+        drawable.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888
     )
 
     val wrappedDrawable = DrawableCompat.wrap(drawable).mutate()
@@ -547,4 +586,21 @@ fun calculateMidpoint(point1: LatLng, point2: LatLng): LatLng {
     val midLat = (point1.latitude + point2.latitude) / 2
     val midLng = (point1.longitude + point2.longitude) / 2
     return LatLng(midLat, midLng)
+}
+
+@Composable
+actual fun GetLocationName(item: CoordinatesData): String {
+
+    val convertedData = LatLng(item.latitude,item.longitude)
+    val geocoder = Geocoder(LocalContext.current, Locale.getDefault())
+    return try {
+        val addresses = geocoder.getFromLocation(convertedData.latitude, convertedData.longitude, 1)
+        if (!addresses.isNullOrEmpty()) {
+            addresses[0].getAddressLine(0) ?: "Unknown Location"
+        } else {
+            "Unknown Location"
+        }
+    } catch (e: IOException) {
+        "Location Unavailable"
+    }
 }

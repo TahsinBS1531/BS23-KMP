@@ -14,6 +14,7 @@ sealed class HomeScreenEvent {
     data class toogleBottomSheet(val isShow: Boolean) : HomeScreenEvent()
     object showBottomSheet : HomeScreenEvent()
     object SignOut : HomeScreenEvent()
+    object resetState : HomeScreenEvent()
 }
 
 
@@ -27,6 +28,8 @@ data class HomeSceenState(
     val endTime: String = "",
     val showTrack: Boolean = false,
     val isShowBottomSheet: Boolean = false,
+    val historyLoader : Boolean = false,
+    val isSignedOut:Boolean = false,
 )
 
 data class MapHistoryItem(

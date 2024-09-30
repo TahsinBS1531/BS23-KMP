@@ -1,7 +1,7 @@
 package com.jetbrains.bs23_kmp.screens.home
 
+import KottieAnimation
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,30 +11,35 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -42,12 +47,23 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.jetbrains.bs23_kmp.core.base.widget.BaseViewState
 import com.jetbrains.bs23_kmp.core.base.widget.EmptyView
-import com.jetbrains.bs23_kmp.core.base.widget.LoadingView
+import contentScale.ContentScale
+import kmp_app_template.composeapp.generated.resources.Res
+import kottieComposition.KottieCompositionSpec
+import kottieComposition.animateKottieCompositionAsState
+import kottieComposition.rememberKottieComposition
+import org.jetbrains.compose.resources.ExperimentalResourceApi
+import utils.KottieConstants
 import kotlin.math.pow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MapScreen1(onNavigation: (String?) -> Unit, email: String, navController: NavController, viewModel: HomeViewModel) {
+fun MapScreen1(
+    onNavigation: (String?) -> Unit,
+    email: String,
+    navController: NavController,
+    viewModel: HomeViewModel
+) {
 //    val viewModel: HomeViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
     val scheme = MaterialTheme.colorScheme
@@ -84,10 +100,47 @@ fun MapScreenBody1(
 
         BaseViewState.Empty -> EmptyView()
         is BaseViewState.Error -> Text("Error while Loading the state")
-        BaseViewState.Loading -> LoadingView()
+        BaseViewState.Loading -> LottieLoader()
     }
 
 }
+
+@OptIn(ExperimentalResourceApi::class)
+@Composable
+fun LottieLoader(){
+    var animation by remember { mutableStateOf("") }
+    LaunchedEffect(Unit) {
+        animation = Res.readBytes("files/lottie3.json").decodeToString()
+    }
+
+    val composition = rememberKottieComposition(
+        spec = KottieCompositionSpec.File(animation) // Or KottieCompositionSpec.Url || KottieCompositionSpec.JsonString
+    )
+
+    var playing by remember { mutableStateOf(true) }
+
+    val animationState by animateKottieCompositionAsState(
+        composition = composition,
+//        isPlaying = playing,
+        reverseOnRepeat = true,
+        iterations = KottieConstants.IterateForever
+    )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+
+        KottieAnimation(
+            composition = composition,
+            progress = { animationState.progress },
+            modifier = Modifier.size(150.dp).align(Alignment.Center),
+            contentScale = ContentScale.Crop
+        )
+
+    }
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,101 +153,54 @@ fun MapScreenContent1(
 ) {
     val tabs = listOf("Tour", "History")
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 15.dp),
     ) {
-        Column(modifier =Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+
+        MapTourPage(
+            modifier = Modifier.fillMaxSize(),
+            isTracking = uiState.isTracking,
+            currentLocation = uiState.currentLocation,
+            trackedLocations = uiState.trackedLocations,
+            lastTrackedLocations = if (uiState.trackHistory.isNotEmpty()) uiState.trackHistory.last().locations else emptyList(),
+            onStartTracking = { onEvent(HomeScreenEvent.toggleTracking(true)) },
+            onStopTracking = {
+                onEvent(HomeScreenEvent.toggleTracking(false))
+                onEvent(HomeScreenEvent.saveMapData(email))
+            },
+            onLocationUpdate = {
+                onEvent(HomeScreenEvent.updateLocation(it))
+            },
+            isShowTrack = uiState.showTrack,
+            onToogleShowTrack = {
+                onEvent(HomeScreenEvent.toggleShowTrack(it))
+            },
+            onStartTime = {
+                onEvent(HomeScreenEvent.updateStartTime(it))
+            },
+            onEndTime = {
+                onEvent(HomeScreenEvent.updateEndTime(it))
+            },
+            startTime = uiState.startTime,
+            endTime = uiState.endTime,
+            email = email,
+            navController = navController
+        )
+
+        IconButton(
+            onClick = {
+                navController.navigate("history/$email")
+            },
+            colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.primary),
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 16.dp, end = 16.dp)
+                .size(50.dp)
         ) {
-            Text(
-                text = "Welcome $email",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(top = 16.dp)
+            Icon(
+                Icons.Default.Settings, "Settings", tint = MaterialTheme.colorScheme.onPrimary
             )
-            Text(
-                text = "Explore the city with us",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 16.dp)
-            )
-            TextButton(onClick ={
-                onEvent(HomeScreenEvent.SignOut)
-                navController.navigate("login")
-
-            }){
-                Text(text = "Sign Out")
-            }
-
-        }
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            PrimaryTabRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 36.dp)
-                    .height(48.dp)
-                    .clip(
-                        RoundedCornerShape(25)
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.outline,
-                        shape = RoundedCornerShape(25)
-                    ),
-                selectedTabIndex = uiState.selectedTabIndex,
-                indicator = {},
-                divider = {}
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    MapTab(
-                        title = title,
-                        isSelected = uiState.selectedTabIndex == index,
-                        onClick = { onEvent(HomeScreenEvent.updateSelectionTab(index)) }
-                    )
-                }
-            }
-            if (uiState.selectedTabIndex == 0) {
-                MapTourPage(
-                    isTracking = uiState.isTracking,
-                    currentLocation = uiState.currentLocation,
-                    trackedLocations = uiState.trackedLocations,
-                    lastTrackedLocations = if (uiState.trackHistory.isNotEmpty()) uiState.trackHistory.last().locations else emptyList(),
-                    onStartTracking = { onEvent(HomeScreenEvent.toggleTracking(true)) },
-                    onStopTracking = {
-                        onEvent(HomeScreenEvent.toggleTracking(false))
-                        onEvent(HomeScreenEvent.saveMapData(email))
-                    },
-                    onLocationUpdate = {
-                        onEvent(HomeScreenEvent.updateLocation(it))
-                    },
-                    isShowTrack = uiState.showTrack,
-                    onToogleShowTrack = {
-                        onEvent(HomeScreenEvent.toggleShowTrack(it))
-                    },
-                    onStartTime = {
-                        onEvent(HomeScreenEvent.updateStartTime(it))
-                    },
-                    onEndTime = {
-                        onEvent(HomeScreenEvent.updateEndTime(it))
-                    },
-                    startTime = uiState.startTime,
-                    endTime = uiState.endTime,
-                )
-            }
-            if (uiState.selectedTabIndex == 1) {
-                onEvent(HomeScreenEvent.showLocationHistory(email))
-                HistoryPage(
-                    historyItems = uiState.trackHistory,
-                    isShowBottomSheet = uiState.isShowBottomSheet,
-                    onToogleBottomSheet = {
-                        onEvent(HomeScreenEvent.toogleBottomSheet(it))
-                    },
-                    onDeleteItem = {
-                        onEvent(HomeScreenEvent.deleteDocument(email,it))
-                        onEvent(HomeScreenEvent.showLocationHistory(email))
-                    },
-                )
-            }
         }
     }
 }
@@ -233,6 +239,7 @@ fun MapTab(
 
 @Composable
 expect fun MapTourPage(
+    modifier: Modifier,
     isTracking: Boolean,
     currentLocation: CoordinatesData?,
     trackedLocations: List<CoordinatesData>,
@@ -245,7 +252,9 @@ expect fun MapTourPage(
     onStartTime: (String) -> Unit,
     onEndTime: (String) -> Unit,
     startTime: String,
-    endTime: String
+    endTime: String,
+    email: String,
+    navController: NavController
 )
 
 @Composable
@@ -253,6 +262,7 @@ expect fun MapLocationPermissionDenied()
 
 @Composable
 expect fun MapWithLocationTracking1(
+    modifier: Modifier,
     isTracking: Boolean,
     currentLocation: CoordinatesData?,
     onLocationUpdate: (CoordinatesData) -> Unit,
@@ -261,59 +271,154 @@ expect fun MapWithLocationTracking1(
 )
 
 
-
 // Content for History Tab
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryPage(
     modifier: Modifier = Modifier,
-    historyItems: List<MapHistoryItem> = emptyList(),
-    isShowBottomSheet: Boolean = false,
-    onToogleBottomSheet: (Boolean) -> Unit,
-    onDeleteItem: (String) -> Unit
+    email: String,
+    navController: NavController,
+    viewModel: HomeViewModel
+
 ) {
-    val trackIndex = remember { mutableStateOf(MapHistoryItem("", "", "", "", "", emptyList())) }
-    Box(
-        modifier = modifier.fillMaxSize()
-    ) {
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            contentPadding = PaddingValues(16.dp)
-        ) {
-            itemsIndexed(historyItems) { _, item ->
-                HistoryCard(
-                    item = item,
-                    onClick = {
-                        trackIndex.value = it
-                        onToogleBottomSheet.invoke(!isShowBottomSheet)
-                    },
-                    onDelete = {
-                        onDeleteItem.invoke(item.id)
-                    }
-                )
-            }
-        }
-        if (isShowBottomSheet) {
-            ModalBottomSheet(
-                sheetState = rememberModalBottomSheetState(
-                    skipPartiallyExpanded = true
-                ),
-                onDismissRequest = {
-                    onToogleBottomSheet.invoke(false)
-                }
-            ) {
-                TrackMap1(
+    val uiState = viewModel.uiState.collectAsState().value
+
+    when (uiState) {
+        is BaseViewState.Data -> {
+
+            val state = uiState.value as? HomeSceenState
+            if(state?.historyLoader ==true){
+                Box(
                     modifier = Modifier.fillMaxSize(),
-                    trackPoints = trackIndex.value.locations
-                )
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }else{
+                val historyItems = state?.trackHistory ?: emptyList()
+                val isShowBottomSheet = state?.isShowBottomSheet ?: false
+
+                val trackIndex =
+                    remember { mutableStateOf(MapHistoryItem("", "", "", "", "", emptyList())) }
+
+                LaunchedEffect(Unit) {
+                    viewModel.onTriggerEvent(HomeScreenEvent.showLocationHistory(email))
+                }
+
+                println("Email: $email")
+
+                Column(
+                    modifier = modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        IconButton(
+                            onClick = {
+                                navController.popBackStack()
+                            }, modifier = Modifier.align(Alignment.CenterStart)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Back",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+
+                        println("sign out value : ${state?.isSignedOut}")
+                        if (state?.isSignedOut == true) {
+                            viewModel.onTriggerEvent(HomeScreenEvent.resetState)
+                            LaunchedEffect(Unit) {
+                                navController.navigate("login") {
+                                    popUpTo("home") { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                        }
+
+                        TextButton(
+                            onClick = {
+                                viewModel.onTriggerEvent(HomeScreenEvent.SignOut)
+//                                navController.navigate("login"){
+//                                    popUpTo("home")
+//                                    launchSingleTop = true
+//                                }
+                            }, modifier = Modifier.align(Alignment.CenterEnd)
+                        ) {
+                            Text("Sign Out")
+                        }
+                    }
+
+                    println("historyItems: $historyItems")
+
+
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        contentPadding = PaddingValues(16.dp),
+                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                    ) {
+                        if(historyItems.isEmpty()) {
+                            item {
+                                Text(
+                                    text = "No history found",
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.Center,
+                                    color = Color.Gray
+                                )
+                            }
+                        }else{
+                            itemsIndexed(historyItems) { _, item ->
+                                HistoryCard(
+                                    item = item,
+                                    onClick = {
+                                        trackIndex.value = it
+                                        viewModel.onTriggerEvent(HomeScreenEvent.toogleBottomSheet(!isShowBottomSheet))
+                                    },
+                                    onDelete = {
+                                        viewModel.onTriggerEvent(
+                                            HomeScreenEvent.deleteDocument(
+                                                email,
+                                                item.id
+                                            )
+                                        )
+                                        viewModel.onTriggerEvent(HomeScreenEvent.showLocationHistory(email))
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    if (isShowBottomSheet) {
+                        ModalBottomSheet(
+                            sheetState = rememberModalBottomSheetState(
+                                skipPartiallyExpanded = true
+                            ),
+                            onDismissRequest = {
+                                viewModel.onTriggerEvent(HomeScreenEvent.toogleBottomSheet(false))
+                            }
+                        ) {
+                            TrackMap1(
+                                modifier = Modifier.fillMaxSize(),
+                                trackPoints = trackIndex.value.locations
+                            )
+                        }
+                    }
+                }
             }
         }
+
+        BaseViewState.Empty -> EmptyView()
+        is BaseViewState.Error -> Text("Error while Loading the state")
+        BaseViewState.Loading -> LottieLoader()
     }
+
 }
 
 @Composable
-expect fun TrackMap1(modifier: Modifier =Modifier, trackPoints: List<CoordinatesData>)
+expect fun TrackMap1(modifier: Modifier = Modifier, trackPoints: List<CoordinatesData>)
 
+@Composable
+expect fun GetLocationName(item: CoordinatesData): String
 
 @Composable
 fun HistoryCard(
@@ -322,6 +427,12 @@ fun HistoryCard(
     onClick: (MapHistoryItem) -> Unit,
     onDelete: () -> Unit
 ) {
+    if (item.locations.isEmpty()) {
+        return
+    }
+
+    val startLocation = GetLocationName(item.locations.first())
+    val endLocation = GetLocationName(item.locations.last())
     OutlinedCard(
         onClick = { onClick.invoke(item) },
         modifier = modifier
@@ -329,9 +440,14 @@ fun HistoryCard(
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalAlignment = Alignment.Start
         ) {
-            Row(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
+            ) {
                 Text(
                     text = item.title, style = MaterialTheme.typography.titleLarge.copy(
                         color = MaterialTheme.colorScheme.primary
@@ -351,29 +467,43 @@ fun HistoryCard(
                     )
                 }
             }
-            Text(
-                text = item.description, style = MaterialTheme.typography.bodyLarge.copy(
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-            )
-            Row(Modifier.fillMaxWidth()) {
+            HorizontalDivider()
+//            Text(
+//                text = item.description, style = MaterialTheme.typography.bodyLarge.copy(
+//                    color = MaterialTheme.colorScheme.onBackground
+//                )
+//            )
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
+            ) {
                 Text(
-                    text = "Start Location: ${item.locations.first()}",
+                    text = "Start Location: $startLocation",
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f)
+                        .weight(1f),
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "End Location: ${item.locations.last()}",
+                    text = "End Location: $endLocation",
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f)
+                        .weight(1f),
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
+            HorizontalDivider()
 
-            Row(Modifier.fillMaxWidth()) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = "Start Time: ${if (item.startTime.isNotEmpty()) item.startTime else "N/A"} ",
                     textAlign = TextAlign.Center,

@@ -24,6 +24,7 @@ firebase-crashlytics-plugin = "2.9.9"
 google-play-services = "4.4.1"
 
 accompanist-permissions = "0.31.0-alpha"
+foundationAndroid = "1.6.7"
 
 [libraries]
 androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
@@ -52,6 +53,7 @@ google-accompanist-permissions = { module = "com.google.accompanist:accompanist-
 
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-crashlyticsKtx = { module = "com.google.firebase:firebase-crashlytics-ktx" }
+androidx-foundation-android = { group = "androidx.compose.foundation", name = "foundation-android", version.ref = "foundationAndroid" }
 
 
 [plugins]

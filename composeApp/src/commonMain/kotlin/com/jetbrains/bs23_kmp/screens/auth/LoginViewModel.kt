@@ -7,7 +7,7 @@ import kotlinx.coroutines.launch
 
 class LoginViewModel(
     private val authService: AuthService
-) :MviViewModel<BaseViewState<LoginUiState>, LoginEvent>() {
+) : MviViewModel<BaseViewState<LoginUiState>, LoginEvent>() {
 
     private var data = LoginUiState()
 
@@ -19,6 +19,7 @@ class LoginViewModel(
     private fun observeCurrentUser() {
         viewModelScope.launch {
             authService.currentUser.collect {
+                println("current user : $it")
                 data = data.copy(currentUser = it)
                 setState(BaseViewState.Data(data))
             }
@@ -73,9 +74,14 @@ class LoginViewModel(
             setState(BaseViewState.Data(data))
 
             try {
-                val res = authService.authenticate(email, password)
+                authService.authenticate(email, password)
                 if (authService.isAuthenticated) {
-                    data = data.copy(isLoginSuccess = true)
+                    data = data.copy(
+                        isLoginSuccess = true,
+                        email = "",
+                        password = ""
+                    )
+                    setState(BaseViewState.Data(data))
                 } else {
                     data = data.copy(isLoginFailed = true)
                 }
@@ -109,6 +115,8 @@ class LoginViewModel(
     fun onSignOut() {
         viewModelScope.launch {
             authService.signOut()
+            data = data.copy(currentUser = null)
+            setState(BaseViewState.Data(data))
         }
     }
 
