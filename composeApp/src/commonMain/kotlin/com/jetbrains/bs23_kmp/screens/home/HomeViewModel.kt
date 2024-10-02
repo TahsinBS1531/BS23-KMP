@@ -77,8 +77,8 @@ class HomeViewModel (private val authService: AuthService): MviViewModel<BaseVie
                         description = item.second.description,
                         locations = item.second.locations.map {
                             CoordinatesData(
-                                it.latitude,
-                                it.longitude
+                                it.coordinates,
+                                it.time
                             )
                         },
                         startTime = item.second.startTime,
@@ -117,6 +117,7 @@ class HomeViewModel (private val authService: AuthService): MviViewModel<BaseVie
         val totalLocations = _uiState.trackedLocations.size
         val startTime = _uiState.startTime
         val endTime = _uiState.endTime
+        println("USer End Time : $endTime")
         _uiState = _uiState.copy(
             startTime = startTime,
             endTime = endTime,

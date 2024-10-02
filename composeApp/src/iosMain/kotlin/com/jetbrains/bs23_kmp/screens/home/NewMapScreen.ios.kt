@@ -60,7 +60,11 @@ actual fun GradientPolyline1(
     width: Float
 ) {
 }
-
+@Composable
 actual fun GetLocationName(item: CoordinatesData): String {
 
+}
+
+actual fun formatMillsToTime(mills: Long): String {
+    TODO("Not yet implemented")
 }

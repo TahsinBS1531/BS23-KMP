@@ -167,6 +167,7 @@ fun MapScreenContent1(
             onStartTracking = { onEvent(HomeScreenEvent.toggleTracking(true)) },
             onStopTracking = {
                 onEvent(HomeScreenEvent.toggleTracking(false))
+//                onEvent(HomeScreenEvent.toggleShowTrack(true))
                 onEvent(HomeScreenEvent.saveMapData(email))
             },
             onLocationUpdate = {
@@ -420,6 +421,8 @@ expect fun TrackMap1(modifier: Modifier = Modifier, trackPoints: List<Coordinate
 @Composable
 expect fun GetLocationName(item: CoordinatesData): String
 
+expect fun formatMillsToTime(mills:Long):String
+
 @Composable
 fun HistoryCard(
     modifier: Modifier = Modifier,
@@ -505,14 +508,16 @@ fun HistoryCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Start Time: ${if (item.startTime.isNotEmpty()) item.startTime else "N/A"} ",
+//                    text = "Start Time: ${if (item.startTime.isNotEmpty()) item.startTime else "N/A"} ",
+                    text = "Start Time : ${formatMillsToTime(item.locations.first().time)}",
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
                 )
                 Text(
-                    text = "End Time: ${if (item.endTime.isNotEmpty()) item.endTime else "N/A"} ",
+//                    text = "End Time: ${if (item.endTime.isNotEmpty()) item.endTime else "N/A"} ",
+                    text = "End Time : ${formatMillsToTime(item.locations.last().time)}",
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -523,11 +528,11 @@ fun HistoryCard(
     }
 }
 
-fun calculateMidpoint(point1: CoordinatesData, point2: CoordinatesData): CoordinatesData {
-    val midLat = (point1.latitude + point2.latitude) / 2
-    val midLng = (point1.longitude + point2.longitude) / 2
-    return CoordinatesData(midLat, midLng)
-}
+//fun calculateMidpoint(point1: CoordinatesData, point2: CoordinatesData): CoordinatesData {
+//    val midLat = (point1.latitude + point2.latitude) / 2
+//    val midLng = (point1.longitude + point2.longitude) / 2
+//    return CoordinatesData(midLat, midLng)
+//}
 
 @Composable
 expect fun GradientPolyline1(

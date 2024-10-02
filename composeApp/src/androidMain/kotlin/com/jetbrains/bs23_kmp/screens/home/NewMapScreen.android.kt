@@ -79,6 +79,9 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 
@@ -116,6 +119,7 @@ actual fun MapTourPage(
     }
 
     val timeFormatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
+    val currentTime = System.currentTimeMillis()
 
     Box(
         modifier = modifier.fillMaxSize(),
@@ -222,6 +226,7 @@ actual fun MapTourPage(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = {
                         if (isTracking) {
+                            onToogleShowTrack(true)
                             onStopTracking()
                             onEndTime(timeFormatter.format(Date()))
                         } else {
@@ -288,11 +293,11 @@ actual fun MapWithLocationTracking1(
     val fusedLocationClient = rememberFusedLocationProviderClient()
     val defaultZoom = 10f
     var zoomLevel by remember { mutableStateOf(defaultZoom) } // Track zoom level
-    val converTedCurrentPosition = currentLocation?.let {
+    val converTedCurrentPosition = currentLocation?.coordinates?.let {
         LatLng(it.latitude, it.longitude)
     }
     val convertedTrackedLocations = trackedLocations?.map { location ->
-        LatLng(location.latitude, location.longitude)
+        location.coordinates.let { LatLng(it.latitude, it.longitude) }
     }
 
     val cameraPositionState = rememberCameraPositionState {
@@ -333,8 +338,7 @@ actual fun MapWithLocationTracking1(
         ) {
             scope.launch {
                 fusedLocationClient.getLocationUpdates(locationRequest).collect {
-
-                    onLocationUpdate(CoordinatesData(it.latitude, it.longitude))
+                    onLocationUpdate(CoordinatesData(coordinates = LocationData(it.latitude, it.longitude)))
                 }
             }
         }
@@ -362,6 +366,8 @@ actual fun MapWithLocationTracking1(
         ),
         properties = MapProperties(
             mapType = MapType.NORMAL,
+            isMyLocationEnabled = true,
+            isTrafficEnabled = true,
         )
     ) {
         // Show the user's current location as a marker
@@ -374,7 +380,7 @@ actual fun MapWithLocationTracking1(
             )
         }
 
-        if (isShowTrack && trackedLocations?.size!! > 1) {
+        if (isTracking && trackedLocations?.size!! > 1) {
 
             convertedTrackedLocations?.let { points ->
                 GradientPolyline(
@@ -394,6 +400,35 @@ actual fun MapWithLocationTracking1(
                 )
             }
 
+//            val endIcon = context.vectorToMapMarker(
+//                R.drawable.ic_marker, MaterialTheme.colorScheme.primary
+//            )
+//            convertedTrackedLocations?.lastOrNull()?.let { endPoint ->
+//                Marker(
+//                    state = MarkerState(position = endPoint), title = "End", icon = endIcon
+//                )
+//            }
+        }
+        if(isShowTrack && convertedTrackedLocations?.size!! > 1) {
+            convertedTrackedLocations.let { points ->
+                GradientPolyline(
+                    polylinePoints = points,
+                    startColor = MaterialTheme.colorScheme.error,
+                    endColor = MaterialTheme.colorScheme.primary,
+                    width = 5f,
+                )
+            }
+
+            val startIcon = context.vectorToMapMarker(
+                R.drawable.ic_marker_start
+            )
+
+            convertedTrackedLocations?.firstOrNull()?.let { startPoint ->
+                Marker(
+                    state = MarkerState(position = startPoint), title = "Start", icon = startIcon
+                )
+            }
+
             val endIcon = context.vectorToMapMarker(
                 R.drawable.ic_marker, MaterialTheme.colorScheme.primary
             )
@@ -402,21 +437,8 @@ actual fun MapWithLocationTracking1(
                     state = MarkerState(position = endPoint), title = "End", icon = endIcon
                 )
             }
-        }
-    }
-}
 
-fun getLocationName(context: Context, lat: Double, lon: Double): String {
-    val geocoder = Geocoder(context, Locale.getDefault())
-    return try {
-        val addresses = geocoder.getFromLocation(lat, lon, 1)
-        if (!addresses.isNullOrEmpty()) {
-            addresses[0].getAddressLine(0) ?: "Unknown Location"
-        } else {
-            "Unknown Location"
         }
-    } catch (e: IOException) {
-        "Location Unavailable"
     }
 }
 
@@ -426,14 +448,16 @@ actual fun TrackMap1(
     modifier: Modifier, trackPoints: List<CoordinatesData>
 ) {
     val context = LocalContext.current
-    val converTedtrackPoints = trackPoints.map {
-        LatLng(it.latitude, it.longitude)
+
+    val converTedtrackPoints = trackPoints.mapNotNull { location ->
+        location.coordinates?.let { LatLng(it.latitude, it.longitude) }
     }
 
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(
             calculateMidpoint(
-                converTedtrackPoints.first(), converTedtrackPoints.last()
+                converTedtrackPoints.firstOrNull() ?: LatLng(0.0, 0.0),
+                converTedtrackPoints.lastOrNull() ?: LatLng(0.0, 0.0)
             ), 10f
         )
     }
@@ -443,8 +467,6 @@ actual fun TrackMap1(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
             uiSettings = MapUiSettings(
-//                zoomControlsEnabled = false,
-//                compassEnabled = false,
                 myLocationButtonEnabled = true
             )
         ) {
@@ -455,23 +477,27 @@ actual fun TrackMap1(
                 width = 5f,
             )
 
-            val startIcon = context.vectorToMapMarker(
-                R.drawable.ic_marker_start
-            )
-            Marker(
-                state = MarkerState(position = converTedtrackPoints.first()),
-                title = "Start",
-                icon = startIcon
-            )
+            converTedtrackPoints.firstOrNull()?.let { firstPoint ->
+                val startIcon = context.vectorToMapMarker(
+                    R.drawable.ic_marker_start
+                )
+                Marker(
+                    state = MarkerState(position = firstPoint),
+                    title = "Start",
+                    icon = startIcon
+                )
+            }
 
-            val endIcon = context.vectorToMapMarker(
-                R.drawable.ic_marker, MaterialTheme.colorScheme.primary
-            )
-            Marker(
-                state = MarkerState(position = converTedtrackPoints.last()),
-                title = "End",
-                icon = endIcon
-            )
+            converTedtrackPoints.lastOrNull()?.let { lastPoint ->
+                val endIcon = context.vectorToMapMarker(
+                    R.drawable.ic_marker, MaterialTheme.colorScheme.primary
+                )
+                Marker(
+                    state = MarkerState(position = lastPoint),
+                    title = "End",
+                    icon = endIcon
+                )
+            }
         }
     }
 }
@@ -501,9 +527,9 @@ actual fun GradientPolyline1(
 }
 
 fun ConvertToLatLng(item: CoordinatesData): LatLng {
-    val lat = item.latitude
-    val lng = item.longitude
-    return LatLng(lat, lng)
+    val lat = item.coordinates?.latitude
+    val lng = item.coordinates?.longitude
+    return LatLng(lat ?: 0.0, lng?: 0.0)
 }
 
 
@@ -591,9 +617,10 @@ fun calculateMidpoint(point1: LatLng, point2: LatLng): LatLng {
 @Composable
 actual fun GetLocationName(item: CoordinatesData): String {
 
-    val convertedData = LatLng(item.latitude,item.longitude)
+    val convertedData = LatLng(item.coordinates?.latitude ?: 0.0,item.coordinates?.longitude ?: 0.0)
     val geocoder = Geocoder(LocalContext.current, Locale.getDefault())
     return try {
+
         val addresses = geocoder.getFromLocation(convertedData.latitude, convertedData.longitude, 1)
         if (!addresses.isNullOrEmpty()) {
             addresses[0].getAddressLine(0) ?: "Unknown Location"
@@ -603,4 +630,14 @@ actual fun GetLocationName(item: CoordinatesData): String {
     } catch (e: IOException) {
         "Location Unavailable"
     }
+}
+
+actual fun formatMillsToTime(mills: Long): String {
+    val instant = Instant.ofEpochMilli(mills)
+//    val timeFormatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
+//    return timeFormatter.format(instant)
+    val formatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault())
+        .withZone(ZoneId.systemDefault())
+
+    return formatter.format(instant)
 }

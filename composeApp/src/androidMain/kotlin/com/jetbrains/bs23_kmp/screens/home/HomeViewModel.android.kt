@@ -27,14 +27,14 @@ actual fun SaveTrackedLocations(
 
     val firestore = FirebaseFirestore.getInstance()
 
-    val locationDataList = trackedLocations.map { latLng ->
-        CoordinatesData(latLng.latitude, latLng.longitude)
-    }
+//    val locationDataList = trackedLocations.map { latLng ->
+//        CoordinatesData(latLng.latitude, latLng.longitude)
+//    }
 
     val historyItem = HistoryItemFirestore1(
         title = historyTitle,
         description = description,
-        locations = locationDataList,
+        locations = trackedLocations,
         startTime = startTime,
         endTime = endTime
     )

@@ -1,5 +1,7 @@
 package com.jetbrains.bs23_kmp.screens.home
 
+import kotlinx.datetime.Clock
+
 
 sealed class HomeScreenEvent {
     data class updateLocation(val location : CoordinatesData) : HomeScreenEvent()
@@ -20,7 +22,7 @@ sealed class HomeScreenEvent {
 
 data class HomeSceenState(
     val isTracking: Boolean = false, // Tracking state
-    val currentLocation: CoordinatesData? = CoordinatesData(23.42, 90.20),
+    val currentLocation: CoordinatesData? = CoordinatesData(LocationData(23.42, 90.20),),
     val trackedLocations: List<CoordinatesData> = emptyList(), // List to store tracked points
     val selectedTabIndex: Int = 0, // Index of the selected tab
     val trackHistory: List<MapHistoryItem> = emptyList(),
@@ -39,9 +41,16 @@ data class MapHistoryItem(
     val startTime: String,
     val endTime: String,
     val locations: List<CoordinatesData>,
-)
+){
+    constructor() : this("", "", "", "", "", emptyList())
+}
 
 data class CoordinatesData(
+    val coordinates : LocationData = LocationData(),
+    val time: Long = Clock.System.now().toEpochMilliseconds(),
+)
+
+data class LocationData(
     val latitude: Double = 0.0,
     val longitude: Double = 0.0
 )
