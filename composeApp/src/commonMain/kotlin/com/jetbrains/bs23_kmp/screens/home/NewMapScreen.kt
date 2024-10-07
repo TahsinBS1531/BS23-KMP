@@ -67,6 +67,9 @@ fun MapScreen1(
 //    val viewModel: HomeViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
     val scheme = MaterialTheme.colorScheme
+    LaunchedEffect(Unit) {
+        viewModel.onTriggerEvent(HomeScreenEvent.showLocationHistory(email))
+    }
 
     MapScreenBody1(
         modifier = Modifier,
@@ -107,7 +110,7 @@ fun MapScreenBody1(
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
-fun LottieLoader(){
+fun LottieLoader() {
     var animation by remember { mutableStateOf("") }
     LaunchedEffect(Unit) {
         animation = Res.readBytes("files/lottie3.json").decodeToString()
@@ -164,16 +167,20 @@ fun MapScreenContent1(
             currentLocation = uiState.currentLocation,
             trackedLocations = uiState.trackedLocations,
             lastTrackedLocations = if (uiState.trackHistory.isNotEmpty()) uiState.trackHistory.last().locations else emptyList(),
-            onStartTracking = { onEvent(HomeScreenEvent.toggleTracking(true)) },
+            onStartTracking = {
+                onEvent(HomeScreenEvent.toggleTracking(true))
+                onEvent(HomeScreenEvent.isShowTrack)
+            },
             onStopTracking = {
                 onEvent(HomeScreenEvent.toggleTracking(false))
 //                onEvent(HomeScreenEvent.toggleShowTrack(true))
                 onEvent(HomeScreenEvent.saveMapData(email))
+                onEvent(HomeScreenEvent.showLocationHistory(email))
             },
             onLocationUpdate = {
                 onEvent(HomeScreenEvent.updateLocation(it))
             },
-            isShowTrack = uiState.showTrack,
+            isShowTrack = uiState.isShowTrack,
             onToogleShowTrack = {
                 onEvent(HomeScreenEvent.toggleShowTrack(it))
             },
@@ -284,27 +291,29 @@ fun HistoryPage(
 ) {
     val uiState = viewModel.uiState.collectAsState().value
 
+//    LaunchedEffect(Unit) {
+//        viewModel.onTriggerEvent(HomeScreenEvent.showLocationHistory(email))
+//    }
+
     when (uiState) {
         is BaseViewState.Data -> {
 
             val state = uiState.value as? HomeSceenState
-            if(state?.historyLoader ==true){
+            println("History Loader: ${state?.historyLoader}")
+            if (state?.historyLoader == true) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
                 }
-            }else{
+            } else {
                 val historyItems = state?.trackHistory ?: emptyList()
                 val isShowBottomSheet = state?.isShowBottomSheet ?: false
 
                 val trackIndex =
                     remember { mutableStateOf(MapHistoryItem("", "", "", "", "", emptyList())) }
 
-                LaunchedEffect(Unit) {
-                    viewModel.onTriggerEvent(HomeScreenEvent.showLocationHistory(email))
-                }
 
                 println("Email: $email")
 
@@ -359,7 +368,7 @@ fun HistoryPage(
                         contentPadding = PaddingValues(16.dp),
                         modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                     ) {
-                        if(historyItems.isEmpty()) {
+                        if (historyItems.isEmpty() && (state?.historyLoader == true || state?.historyLoader == false)) {
                             item {
                                 Text(
                                     text = "No history found",
@@ -368,7 +377,7 @@ fun HistoryPage(
                                     color = Color.Gray
                                 )
                             }
-                        }else{
+                        } else {
                             itemsIndexed(historyItems) { _, item ->
                                 HistoryCard(
                                     item = item,
@@ -383,7 +392,11 @@ fun HistoryPage(
                                                 item.id
                                             )
                                         )
-                                        viewModel.onTriggerEvent(HomeScreenEvent.showLocationHistory(email))
+                                        viewModel.onTriggerEvent(
+                                            HomeScreenEvent.showLocationHistory(
+                                                email
+                                            )
+                                        )
                                     }
                                 )
                             }
@@ -421,7 +434,7 @@ expect fun TrackMap1(modifier: Modifier = Modifier, trackPoints: List<Coordinate
 @Composable
 expect fun GetLocationName(item: CoordinatesData): String
 
-expect fun formatMillsToTime(mills:Long):String
+expect fun formatMillsToTime(mills: Long): String
 
 @Composable
 fun HistoryCard(
@@ -533,14 +546,6 @@ fun HistoryCard(
 //    val midLng = (point1.longitude + point2.longitude) / 2
 //    return CoordinatesData(midLat, midLng)
 //}
-
-@Composable
-expect fun GradientPolyline1(
-    polylinePoints: List<CoordinatesData>,
-    startColor: Color,
-    endColor: Color,
-    width: Float = 5f
-)
 
 
 fun interpolateColor(

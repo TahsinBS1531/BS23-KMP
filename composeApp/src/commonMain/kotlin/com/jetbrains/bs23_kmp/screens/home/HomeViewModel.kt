@@ -33,6 +33,10 @@ class HomeViewModel (private val authService: AuthService): MviViewModel<BaseVie
             is HomeScreenEvent.updateStartTime -> updateStartTime(eventType.time)
             HomeScreenEvent.SignOut -> MapLogOut()
             HomeScreenEvent.resetState -> resetState()
+            HomeScreenEvent.isShowTrack -> {
+                _uiState = _uiState.copy(isShowTrack = true)
+                setState(BaseViewState.Data(_uiState))
+            }
         }
     }
 

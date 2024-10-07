@@ -102,16 +102,15 @@ actual fun MapTourPage(
     onEndTime: (String) -> Unit,
     startTime: String,
     endTime: String,
-    email:String,
+    email: String,
     navController: NavController
 ) {
 
     val fusedLocationClient = rememberFusedLocationProviderClient()
-    // Permission state
+
     val locationPermissionState =
         rememberPermissionState(permission = "android.permission.ACCESS_FINE_LOCATION")
 
-    // Request permissions if necessary
     LaunchedEffect(Unit) {
         if (!locationPermissionState.status.isGranted) {
             locationPermissionState.launchPermissionRequest()
@@ -121,25 +120,27 @@ actual fun MapTourPage(
     val timeFormatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
     val currentTime = System.currentTimeMillis()
 
-    Box(
+    Column(
         modifier = modifier.fillMaxSize(),
     ) {
 
-
         Box(
-            modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f), contentAlignment = Alignment.Center
         ) {
             if (locationPermissionState.status.isGranted) {
-                // Initially show the user's location, then update when tracking is active
                 currentLocation?.let {
+
                     MapWithLocationTracking1(
                         modifier = Modifier.fillMaxSize(),
                         isTracking = isTracking,
                         currentLocation = currentLocation,
                         onLocationUpdate = onLocationUpdate,
-                        trackedLocations = lastTrackedLocations,
+                        trackedLocations = if (isTracking) trackedLocations else lastTrackedLocations,
                         isShowTrack = isShowTrack
                     )
+
                 }
             } else {
                 MapLocationPermissionDenied()
@@ -153,7 +154,6 @@ actual fun MapTourPage(
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surface)
                 .padding(24.dp)
-                .align(Alignment.BottomCenter),
         ) {
 
             Column(
@@ -290,8 +290,12 @@ actual fun MapWithLocationTracking1(
     trackedLocations: List<CoordinatesData>?,
     isShowTrack: Boolean
 ) {
+
+    println("isTracking: $isTracking")
+    println("currentLocation: $currentLocation")
+    println("trackedLocations: $trackedLocations")
     val fusedLocationClient = rememberFusedLocationProviderClient()
-    val defaultZoom = 10f
+    val defaultZoom = 15f
     var zoomLevel by remember { mutableStateOf(defaultZoom) } // Track zoom level
     val converTedCurrentPosition = currentLocation?.coordinates?.let {
         LatLng(it.latitude, it.longitude)
@@ -338,7 +342,14 @@ actual fun MapWithLocationTracking1(
         ) {
             scope.launch {
                 fusedLocationClient.getLocationUpdates(locationRequest).collect {
-                    onLocationUpdate(CoordinatesData(coordinates = LocationData(it.latitude, it.longitude)))
+                    onLocationUpdate(
+                        CoordinatesData(
+                            coordinates = LocationData(
+                                it.latitude,
+                                it.longitude
+                            )
+                        )
+                    )
                 }
             }
         }
@@ -380,9 +391,9 @@ actual fun MapWithLocationTracking1(
             )
         }
 
-        if (isTracking && trackedLocations?.size!! > 1) {
+        if (isTracking && convertedTrackedLocations?.size!! > 1) {
 
-            convertedTrackedLocations?.let { points ->
+            convertedTrackedLocations.let { points ->
                 GradientPolyline(
                     polylinePoints = points,
                     startColor = MaterialTheme.colorScheme.error,
@@ -394,22 +405,13 @@ actual fun MapWithLocationTracking1(
             val startIcon = context.vectorToMapMarker(
                 R.drawable.ic_marker_start
             )
-            convertedTrackedLocations?.firstOrNull()?.let { startPoint ->
+            convertedTrackedLocations.firstOrNull()?.let { startPoint ->
                 Marker(
                     state = MarkerState(position = startPoint), title = "Start", icon = startIcon
                 )
             }
 
-//            val endIcon = context.vectorToMapMarker(
-//                R.drawable.ic_marker, MaterialTheme.colorScheme.primary
-//            )
-//            convertedTrackedLocations?.lastOrNull()?.let { endPoint ->
-//                Marker(
-//                    state = MarkerState(position = endPoint), title = "End", icon = endIcon
-//                )
-//            }
-        }
-        if(isShowTrack && convertedTrackedLocations?.size!! > 1) {
+        }else if (!isTracking && convertedTrackedLocations?.size!! > 1 && isShowTrack) {
             convertedTrackedLocations.let { points ->
                 GradientPolyline(
                     polylinePoints = points,
@@ -502,36 +504,6 @@ actual fun TrackMap1(
     }
 }
 
-@Composable
-actual fun GradientPolyline1(
-    polylinePoints: List<CoordinatesData>, startColor: Color, endColor: Color, width: Float
-) {
-
-    val segmentCount = polylinePoints.size - 1
-
-    // Iterate over the points and draw poly lines with interpolated colors
-    val convertedPoints = polylinePoints.map { ConvertToLatLng(it) }
-
-    for (i in 0 until segmentCount) {
-        val fraction = i / segmentCount.toFloat() // Calculate the color interpolation fraction
-        val color = interpolateColor(startColor, endColor, fraction) // Get interpolated color
-        // Draw each segment with the interpolated color
-        Polyline(
-            points = listOf(convertedPoints[i], convertedPoints[i + 1]),
-            color = color,
-            width = width,
-            jointType = JointType.ROUND,
-            pattern = listOf(Dash(15f), Gap(15f))
-        )
-    }
-}
-
-fun ConvertToLatLng(item: CoordinatesData): LatLng {
-    val lat = item.coordinates?.latitude
-    val lng = item.coordinates?.longitude
-    return LatLng(lat ?: 0.0, lng?: 0.0)
-}
-
 
 @Suppress("MissingPermission")
 fun FusedLocationProviderClient.getLocationUpdates(locationRequest: LocationRequest): Flow<Location> =
@@ -617,7 +589,8 @@ fun calculateMidpoint(point1: LatLng, point2: LatLng): LatLng {
 @Composable
 actual fun GetLocationName(item: CoordinatesData): String {
 
-    val convertedData = LatLng(item.coordinates?.latitude ?: 0.0,item.coordinates?.longitude ?: 0.0)
+    val convertedData =
+        LatLng(item.coordinates?.latitude ?: 0.0, item.coordinates?.longitude ?: 0.0)
     val geocoder = Geocoder(LocalContext.current, Locale.getDefault())
     return try {
 

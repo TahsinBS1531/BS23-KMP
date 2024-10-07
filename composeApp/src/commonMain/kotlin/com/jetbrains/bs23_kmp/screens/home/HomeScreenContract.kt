@@ -17,11 +17,13 @@ sealed class HomeScreenEvent {
     object showBottomSheet : HomeScreenEvent()
     object SignOut : HomeScreenEvent()
     object resetState : HomeScreenEvent()
+    object isShowTrack: HomeScreenEvent()
 }
 
 
 data class HomeSceenState(
     val isTracking: Boolean = false, // Tracking state
+    val isShowTrack: Boolean = false, // Tracking state
     val currentLocation: CoordinatesData? = CoordinatesData(LocationData(23.42, 90.20),),
     val trackedLocations: List<CoordinatesData> = emptyList(), // List to store tracked points
     val selectedTabIndex: Int = 0, // Index of the selected tab

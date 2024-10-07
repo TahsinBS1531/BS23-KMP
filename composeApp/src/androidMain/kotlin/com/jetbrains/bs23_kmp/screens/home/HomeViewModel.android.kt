@@ -1,6 +1,7 @@
 package com.jetbrains.bs23_kmp.screens.home
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 
 actual fun DeleteDocumentFromFirebase(email: String, documentId: String) {
 
@@ -57,14 +58,26 @@ actual fun FetchTrackedLocations(
     val firestore = FirebaseFirestore.getInstance()
 
     firestore.collection("users").document(email).collection("trackedLocations")
-        .get()
-        .addOnSuccessListener { result ->
-            val locationHistory = result.documents.map { document ->
+        .orderBy("startTime", Query.Direction.ASCENDING)
+        .addSnapshotListener { value, error ->
+        error?.let {
+            println("Error fetching tracked locations: ${error.message}")
+        }
+        value?.let {
+            val locationHistory = it.documents.map { document ->
                 document.id to document.toObject(HistoryItemFirestore1::class.java)!!
             }
             onResult(locationHistory)
         }
-        .addOnFailureListener { e ->
-            println("Failed to fetch tracked locations for $email: ${e.message}")
-        }
+    }
+//        .get()
+//        .addOnSuccessListener { result ->
+//            val locationHistory = result.documents.map { document ->
+//                document.id to document.toObject(HistoryItemFirestore1::class.java)!!
+//            }
+//            onResult(locationHistory)
+//        }
+//        .addOnFailureListener { e ->
+//            println("Failed to fetch tracked locations for $email: ${e.message}")
+//        }
 }
