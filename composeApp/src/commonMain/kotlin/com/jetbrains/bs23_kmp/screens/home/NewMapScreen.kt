@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.jetbrains.bs23_kmp.core.base.widget.BaseViewState
 import com.jetbrains.bs23_kmp.core.base.widget.EmptyView
@@ -160,7 +161,9 @@ fun MapScreenContent1(
         modifier = Modifier
             .fillMaxSize()
     ) {
-
+        if(uiState.trackHistory.isNotEmpty()){
+            println("trackHistory: ${uiState.trackHistory.last()}")
+        }
         MapTourPage(
             modifier = Modifier.fillMaxSize(),
             isTracking = uiState.isTracking,
@@ -289,17 +292,17 @@ fun HistoryPage(
     viewModel: HomeViewModel
 
 ) {
-    val uiState = viewModel.uiState.collectAsState().value
+    val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
 
-//    LaunchedEffect(Unit) {
-//        viewModel.onTriggerEvent(HomeScreenEvent.showLocationHistory(email))
-//    }
+    LaunchedEffect(Unit) {
+        viewModel.onTriggerEvent(HomeScreenEvent.showLocationHistory(email))
+    }
 
     when (uiState) {
         is BaseViewState.Data -> {
 
             val state = uiState.value as? HomeSceenState
-            println("History Loader: ${state?.historyLoader}")
+            //println("History Loader: ${state?.historyLoader}")
             if (state?.historyLoader == true) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -315,7 +318,7 @@ fun HistoryPage(
                     remember { mutableStateOf(MapHistoryItem("", "", "", "", "", emptyList())) }
 
 
-                println("Email: $email")
+                //println("Email: $email")
 
                 Column(
                     modifier = modifier.fillMaxSize(),
@@ -336,7 +339,7 @@ fun HistoryPage(
                             )
                         }
 
-                        println("sign out value : ${state?.isSignedOut}")
+                        //println("sign out value : ${state?.isSignedOut}")
                         if (state?.isSignedOut == true) {
                             viewModel.onTriggerEvent(HomeScreenEvent.resetState)
                             LaunchedEffect(Unit) {
@@ -360,7 +363,7 @@ fun HistoryPage(
                         }
                     }
 
-                    println("historyItems: $historyItems")
+                    //println("historyItems: $historyItems")
 
 
                     LazyColumn(

@@ -4,11 +4,13 @@ import androidx.lifecycle.viewModelScope
 import com.jetbrains.bs23_kmp.core.base.viewmodel.MviViewModel
 import com.jetbrains.bs23_kmp.core.base.widget.BaseViewState
 import com.jetbrains.bs23_kmp.screens.auth.AuthService
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class HomeViewModel (private val authService: AuthService): MviViewModel<BaseViewState<HomeSceenState>, HomeScreenEvent>() {
 
     var _uiState = HomeSceenState()
+    private val _isLoading = MutableStateFlow(false)
 
     init {
         setState(BaseViewState.Data(_uiState))
@@ -73,6 +75,7 @@ class HomeViewModel (private val authService: AuthService): MviViewModel<BaseVie
         _uiState = _uiState.copy(historyLoader = true)
         setState(BaseViewState.Data(_uiState))
         FetchTrackedLocations(email) { result ->
+            //println(result)
             _uiState = _uiState.copy(
                 trackHistory = result.map { item ->
                     MapHistoryItem(
@@ -90,7 +93,7 @@ class HomeViewModel (private val authService: AuthService): MviViewModel<BaseVie
                     )
                 }
             )
-            println("Track History From viewModel : ${_uiState.trackHistory}")
+            //println("Track History From viewModel : ${_uiState.trackHistory}")
             setState(BaseViewState.Data(_uiState))
         }
         _uiState = _uiState.copy(historyLoader = false)
@@ -121,7 +124,7 @@ class HomeViewModel (private val authService: AuthService): MviViewModel<BaseVie
         val totalLocations = _uiState.trackedLocations.size
         val startTime = _uiState.startTime
         val endTime = _uiState.endTime
-        println("USer End Time : $endTime")
+        //println("USer End Time : $endTime")
         _uiState = _uiState.copy(
             startTime = startTime,
             endTime = endTime,
@@ -161,8 +164,6 @@ data class HistoryItemFirestore1(
 
 
 expect fun DeleteDocumentFromFirebase(email: String, documentId: String)
-
-
 
 
 expect fun SaveTrackedLocations(

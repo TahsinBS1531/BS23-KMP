@@ -218,7 +218,7 @@ fun LoginScreenContent(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            println("Current user from uiState : ${uiState.currentUser}")
+            //println("Current user from uiState : ${uiState.currentUser}")
 
             LaunchedEffect(uiState.currentUser?.email) {
                 if (uiState.currentUser?.email != null && !uiState.currentUser.isAnonymous) {

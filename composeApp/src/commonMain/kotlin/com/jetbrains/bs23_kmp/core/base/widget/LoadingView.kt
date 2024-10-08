@@ -13,7 +13,7 @@ import com.jetbrains.bs23_kmp.core.theme.AppTheme
 @Composable
 fun LoadingView(modifier: Modifier = Modifier, delayMillis: Long = 100L) {
     Delayed(delayMillis = delayMillis) {
-        println("Delayed LoadingView : $delayMillis")
+        //println("Delayed LoadingView : $delayMillis")
         Box(
             contentAlignment = Alignment.Center,
             modifier = when (modifier == Modifier) {

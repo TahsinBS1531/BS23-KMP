@@ -19,7 +19,7 @@ class LoginViewModel(
     private fun observeCurrentUser() {
         viewModelScope.launch {
             authService.currentUser.collect {
-                println("current user : $it")
+                //println("current user : $it")
                 data = data.copy(currentUser = it)
                 setState(BaseViewState.Data(data))
             }

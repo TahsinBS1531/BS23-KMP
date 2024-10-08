@@ -131,7 +131,7 @@ actual fun MapTourPage(
         ) {
             if (locationPermissionState.status.isGranted) {
                 currentLocation?.let {
-
+                    if(!isTracking) println(lastTrackedLocations)
                     MapWithLocationTracking1(
                         modifier = Modifier.fillMaxSize(),
                         isTracking = isTracking,
@@ -140,7 +140,6 @@ actual fun MapTourPage(
                         trackedLocations = if (isTracking) trackedLocations else lastTrackedLocations,
                         isShowTrack = isShowTrack
                     )
-
                 }
             } else {
                 MapLocationPermissionDenied()
@@ -226,7 +225,6 @@ actual fun MapTourPage(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = {
                         if (isTracking) {
-                            onToogleShowTrack(true)
                             onStopTracking()
                             onEndTime(timeFormatter.format(Date()))
                         } else {
@@ -291,15 +289,16 @@ actual fun MapWithLocationTracking1(
     isShowTrack: Boolean
 ) {
 
-    println("isTracking: $isTracking")
-    println("currentLocation: $currentLocation")
-    println("trackedLocations: $trackedLocations")
+    //println("isTracking: $isTracking")
+    //println("currentLocation: $currentLocation")
+    //println("trackedLocations: $trackedLocations")
     val fusedLocationClient = rememberFusedLocationProviderClient()
     val defaultZoom = 15f
     var zoomLevel by remember { mutableStateOf(defaultZoom) } // Track zoom level
     val converTedCurrentPosition = currentLocation?.coordinates?.let {
         LatLng(it.latitude, it.longitude)
     }
+
     val convertedTrackedLocations = trackedLocations?.map { location ->
         location.coordinates.let { LatLng(it.latitude, it.longitude) }
     }
@@ -377,8 +376,8 @@ actual fun MapWithLocationTracking1(
         ),
         properties = MapProperties(
             mapType = MapType.NORMAL,
-            isMyLocationEnabled = true,
-            isTrafficEnabled = true,
+//            isMyLocationEnabled = true,
+//            isTrafficEnabled = true,
         )
     ) {
         // Show the user's current location as a marker
@@ -391,9 +390,9 @@ actual fun MapWithLocationTracking1(
             )
         }
 
-        if (isTracking && convertedTrackedLocations?.size!! > 1) {
+        if (isTracking && convertedTrackedLocations?.size!! >= 1) {
 
-            convertedTrackedLocations.let { points ->
+            convertedTrackedLocations?.let { points ->
                 GradientPolyline(
                     polylinePoints = points,
                     startColor = MaterialTheme.colorScheme.error,
@@ -411,8 +410,8 @@ actual fun MapWithLocationTracking1(
                 )
             }
 
-        }else if (!isTracking && convertedTrackedLocations?.size!! > 1 && isShowTrack) {
-            convertedTrackedLocations.let { points ->
+        } else if (!isTracking && convertedTrackedLocations?.size!! >= 1 && isShowTrack) {
+            convertedTrackedLocations?.let { points ->
                 GradientPolyline(
                     polylinePoints = points,
                     startColor = MaterialTheme.colorScheme.error,
