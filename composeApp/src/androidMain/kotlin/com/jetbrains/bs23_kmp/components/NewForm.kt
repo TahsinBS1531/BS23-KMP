@@ -1,4 +1,4 @@
-package com.jetbrains.kmpapp.components
+package com.jetbrains.bs23_kmp.components
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
