@@ -9,6 +9,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.jetbrains.bs23_kmp.dashboard.DashboardScreen
 import com.jetbrains.bs23_kmp.screens.components.SearchScreen
 import com.jetbrains.bs23_kmp.screens.detail.DetailScreen
 import com.jetbrains.bs23_kmp.screens.list.ListScreen
@@ -20,10 +21,13 @@ fun App() {
             val navController: NavHostController = rememberNavController()
             NavHost(
                 navController,
-                startDestination = "form"
+                startDestination = "dashboard"
             ) {
                 composable("list") {
                     ListScreen(navController)
+                }
+                composable("dashboard"){
+                    DashboardScreen(navController)
                 }
                 composable("form"){
                     SearchScreen(modifier = Modifier.fillMaxSize())
