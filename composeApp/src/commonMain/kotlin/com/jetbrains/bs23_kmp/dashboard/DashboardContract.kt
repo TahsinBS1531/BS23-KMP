@@ -19,12 +19,15 @@ sealed class DashboardViewEvent{
 }
 
 data class DashboardViewState(
-    val isLoading: Boolean = false,
+    val udLoader: Boolean = false,
+    val amLoader: Boolean = false,
+    val eocLoader: Boolean = false,
+    val focLoader: Boolean = false,
     val error: String? = null,
     val accessoriesConsumption: List<AmAccessoriesConsumptionResponse> = emptyList(),
-    val amCount: List<AmCountResponse> = emptyList(),
-    val eocCount: List<EocCountResponse> = emptyList(),
-    val focCount: List<FocCountResponse> = emptyList(),
+    val amCount: AmCountResponse? = null,
+    val eocCount: EocCountResponse? = null,
+    val focCount: FocCountResponse? = null,
     val stageWiseSubCount: List<StageWiseSubResponse> = emptyList(),
     val udCount: UdCounResponse? = null,
     val dailyReviewedCount: List<DailyReviewdResponse> = emptyList(),
