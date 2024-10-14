@@ -1,12 +1,14 @@
 package com.jetbrains.bs23_kmp.screens.home
 
 import KottieAnimation
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,10 +16,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -27,6 +34,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -452,10 +460,40 @@ fun HistoryCard(
 
     val startLocation = GetLocationName(item.locations.first())
     val endLocation = GetLocationName(item.locations.last())
+
+//    HistoryCardDetails(
+//        modifier = modifier,
+//        item = item,
+//        startLocation,
+//        endLocation,
+//        onClick = { onClick(item) },
+//        onDelete = onDelete
+//    )
+
+    HistoryCardDetailsRenovate(
+        modifier = modifier,
+        item = item,
+        startLocation,
+        endLocation,
+        onClick = { onClick(item) },
+        onDelete = onDelete
+    )
+}
+@Composable
+fun HistoryCardDetails(
+    modifier: Modifier = Modifier,
+    item: MapHistoryItem,
+    startLocation: String,
+    endLocation: String,
+
+    onClick: (item: MapHistoryItem) -> Unit,
+    onDelete: () -> Unit
+)
+{
     OutlinedCard(
-        onClick = { onClick.invoke(item) },
         modifier = modifier
-            .fillMaxWidth()
+            .fillMaxWidth(),
+        onClick = { onClick.invoke(item) },
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -575,5 +613,164 @@ fun interpolateColor(
 }
 
 
+
+@Composable
+fun HistoryCardDetailsRenovate(
+    modifier: Modifier = Modifier,
+    item: MapHistoryItem,
+    startLocation: String,
+    endLocation: String,
+
+    onClick: (item: MapHistoryItem) -> Unit,
+    onDelete: () -> Unit
+)
+{
+    OutlinedCard(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = { onClick(item) },
+    ){
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+
+                LocationSection(
+                    label = "Start",
+                    location = startLocation,
+                    time = formatMillsToTime(item.locations.first().time)
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                LocationSection(
+                    label = "End",
+                    location = endLocation,
+                    time = formatMillsToTime(item.locations.last().time)
+                )
+
+            }
+
+            HorizontalDivider(modifier = Modifier.fillMaxWidth())
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ){
+
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ){
+                    IconButton(
+                        onClick = {}
+                    ) {
+                        Icon(Icons.Default.List, contentDescription = "List")
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(Icons.Outlined.Delete, contentDescription = "Delete")
+                    }
+
+                }
+                TextButton(
+                    onClick = {onClick(item)}
+                ) {
+                    Text("Show on map")
+                }
+            }
+
+
+        }
+
+    }
+}
+
+@Composable
+fun LocationSection(
+    label: String,
+    location: String,
+    time: String
+){
+    Row(
+        modifier = Modifier
+            .padding(vertical = 8.dp)
+            .fillMaxWidth(),
+
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+//        Text(label, style = MaterialTheme.typography.titleSmall)
+//        Badge(
+//            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+//            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+//        ){
+//            Text(text = time, modifier = Modifier.padding(4.dp) )
+//        }
+
+        AppBadgeWithLabel(
+            label = label,
+            content = time
+        )
+
+    }
+
+    Card(
+
+        modifier = Modifier
+            .fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ),
+        shape = MaterialTheme.shapes.small
+    ){
+        Text(
+            modifier = Modifier.padding(10.dp),
+            text=location
+        )
+    }
+
+}
+
+
+@Composable
+fun AppBadgeWithLabel(
+    modifier: Modifier = Modifier,
+    label: String = "Label",
+    content: String = "Content",
+    contentColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    textColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+) {
+    Surface(
+        shape = RoundedCornerShape(4.dp),
+        border = BorderStroke(
+            width = 1.dp,
+            color = contentColor,
+        )
+    ) {
+        Row {
+            Column(verticalArrangement = Arrangement.Center) {
+                Surface(color = contentColor) {
+                    Text(
+                        modifier = modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        text = label,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = textColor
+                        )
+                    )
+                }
+            }
+            Text(
+                modifier = modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                text = content,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = textColor
+                )
+            )
+        }
+    }
+}
 
 
