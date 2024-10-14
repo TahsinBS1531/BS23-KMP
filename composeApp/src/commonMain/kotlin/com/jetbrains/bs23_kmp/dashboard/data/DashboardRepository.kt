@@ -8,6 +8,7 @@ import com.jetbrains.bs23_kmp.dashboard.model.remote.DailyReviewdResponse
 import com.jetbrains.bs23_kmp.dashboard.model.remote.EocCountResponse
 import com.jetbrains.bs23_kmp.dashboard.model.remote.FocCountResponse
 import com.jetbrains.bs23_kmp.dashboard.model.remote.StageWiseSubResponse
+import com.jetbrains.bs23_kmp.dashboard.model.remote.UdAccessoriesConsumptionResponse
 import com.jetbrains.bs23_kmp.dashboard.model.remote.UdCounResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -25,6 +26,17 @@ class DashboardRepository(private val client: HttpClient) :DashboardApi{
             parameter("fromDate", fromDate)
             parameter("toDate", toDate)
         }.mapSuccess<List<AmAccessoriesConsumptionResponse>>()
+    }
+
+    override suspend fun getUdAccessoriesConsumption(
+        fromDate: String,
+        toDate: String
+    ): List<UdAccessoriesConsumptionResponse> {
+        return client.get {
+            url("$BASE_URL/api/dashboard/ud-accessories-consumption")
+            parameter("fromDate", fromDate)
+            parameter("toDate", toDate)
+        }.mapSuccess<List<UdAccessoriesConsumptionResponse>>()
     }
 
     override suspend fun getAmCount(fromDate: String, toDate: String): List<AmCountResponse> {

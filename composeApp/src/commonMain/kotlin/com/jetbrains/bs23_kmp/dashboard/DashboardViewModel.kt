@@ -4,7 +4,8 @@ import com.jetbrains.bs23_kmp.core.base.viewmodel.MviViewModel
 import com.jetbrains.bs23_kmp.core.base.widget.BaseViewState
 import com.jetbrains.bs23_kmp.dashboard.data.DashboardRepository
 
-class DashboardViewModel(private val repository: DashboardRepository):MviViewModel<BaseViewState<DashboardViewState>,DashboardViewEvent>() {
+class DashboardViewModel(private val repository: DashboardRepository) :
+    MviViewModel<BaseViewState<DashboardViewState>, DashboardViewEvent>() {
 
     var data = DashboardViewState()
 
@@ -18,6 +19,8 @@ class DashboardViewModel(private val repository: DashboardRepository):MviViewMod
         getAmCount("2024-07-01", "2024-09-19")
         getEocCount("2024-07-01", "2024-09-19")
         getFocCount("2024-07-01", "2024-09-19")
+        getAccessoriesConsumption("2024-07-01", "2024-09-19")
+        getStageWiseSubCount("2024-07-01", "2024-09-19")
     }
 
     override fun onTriggerEvent(eventType: DashboardViewEvent) {
@@ -25,6 +28,7 @@ class DashboardViewModel(private val repository: DashboardRepository):MviViewMod
             is DashboardViewEvent.GetAccessoriesConsumption -> {
                 getAccessoriesConsumption(eventType.fromDate, eventType.toDate)
             }
+
             is DashboardViewEvent.GetAmCount -> {
                 getAmCount(eventType.fromDate, eventType.toDate)
             }
@@ -33,13 +37,27 @@ class DashboardViewModel(private val repository: DashboardRepository):MviViewMod
             is DashboardViewEvent.GetEocCount -> {
                 getEocCount(eventType.fromDate, eventType.toDate)
             }
+
             is DashboardViewEvent.GetFocCount -> {
                 getFocCount(eventType.fromDate, eventType.toDate)
             }
-            is DashboardViewEvent.GetStageWiseSubCount -> TODO()
+
+            is DashboardViewEvent.GetStageWiseSubCount -> {
+                getStageWiseSubCount(eventType.fromDate, eventType.toDate)
+            }
             is DashboardViewEvent.GetUdCount -> {
                 getUdCount(eventType.fromDate, eventType.toDate)
             }
+        }
+    }
+
+    private fun getStageWiseSubCount(fromDate: String, toDate: String) {
+        safeLaunch(disableStartLoading = true) {
+            data = data.copy(stageWiseSubLoader = true)
+            setState(BaseViewState.Data(data))
+            val result = repository.getStageWiseSubCount(fromDate, toDate)
+            data = data.copy(stageWiseSubCount = result, stageWiseSubLoader = false)
+            setState(BaseViewState.Data(data))
         }
     }
 
@@ -64,7 +82,7 @@ class DashboardViewModel(private val repository: DashboardRepository):MviViewMod
     }
 
     private fun getAmCount(fromDate: String, toDate: String) {
-        safeLaunch (disableStartLoading = true) {
+        safeLaunch(disableStartLoading = true) {
             data = data.copy(amLoader = true)
             setState(BaseViewState.Data(data))
             val result = repository.getAmCount(fromDate, toDate)
@@ -84,10 +102,16 @@ class DashboardViewModel(private val repository: DashboardRepository):MviViewMod
     }
 
     private fun getAccessoriesConsumption(fromDate: String, toDate: String) {
-        safeLaunch {
-            data = data.copy(udLoader = true)
-            val result = repository.getAmAccessoriesConsumption(fromDate,toDate)
-            data = data.copy(accessoriesConsumption = result, udLoader = false)
+        safeLaunch(disableStartLoading = true) {
+            data = data.copy(consumptionLoader = true)
+            setState(BaseViewState.Data(data))
+            val amResult = repository.getAmAccessoriesConsumption(fromDate, toDate)
+//            val udResult = repository.getUdAccessoriesConsumption(fromDate, toDate)
+            data = data.copy(
+                amAccessoriesConsumption = amResult[0],
+//                udAccessoriesConsumption = udResult[0],
+                consumptionLoader = false
+            )
             setState(BaseViewState.Data(data))
         }
 

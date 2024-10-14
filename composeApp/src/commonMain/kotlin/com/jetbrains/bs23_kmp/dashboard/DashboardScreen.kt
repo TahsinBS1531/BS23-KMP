@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,10 +21,13 @@ import com.jetbrains.bs23_kmp.core.base.widget.BaseViewState
 import com.jetbrains.bs23_kmp.core.base.widget.EmptyView
 import com.jetbrains.bs23_kmp.core.base.widget.LoadingView
 import com.jetbrains.bs23_kmp.core.extensions.cast
+import com.jetbrains.bs23_kmp.dashboard.model.remote.AmAccessoriesConsumptionResponse
+import com.jetbrains.bs23_kmp.dashboard.model.remote.UdAccessoriesConsumptionResponse
 import com.jetbrains.bs23_kmp.dashboard.presentation.DashboardCard
 import com.jetbrains.bs23_kmp.dashboard.presentation.DashboardGraphCard
 import com.jetbrains.bs23_kmp.dashboard.presentation.FullScreenDatePickerComponent
 import com.jetbrains.bs23_kmp.dashboard.presentation.ShimmeringDashboardCard
+import com.jetbrains.bs23_kmp.dashboard.presentation.StageWiseGraphCard
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -128,7 +132,8 @@ fun DashboardScreenContent(
                             DashboardViewEvent.GetUdCount(fromDate, toDate)
                         }
                         isDatePickerVisible = true
-                    }
+                    },
+                    bgColor = MaterialTheme.colorScheme.primaryContainer,
                 )
             }
         }
@@ -148,7 +153,8 @@ fun DashboardScreenContent(
                             DashboardViewEvent.GetAmCount(fromDate, toDate)
                         }
                         isDatePickerVisible = true
-                    }
+                    },
+                    bgColor = MaterialTheme.colorScheme.secondaryContainer,
                 )
             }
         }
@@ -169,7 +175,8 @@ fun DashboardScreenContent(
                             DashboardViewEvent.GetFocCount(fromDate, toDate)
                         }
                         isDatePickerVisible = true
-                    }
+                    },
+                    bgColor = MaterialTheme.colorScheme.tertiaryContainer,
                 )
             }
         }
@@ -190,7 +197,8 @@ fun DashboardScreenContent(
                             DashboardViewEvent.GetEocCount(fromDate, toDate)
                         }
                         isDatePickerVisible = true
-                    }
+                    },
+                    bgColor = MaterialTheme.colorScheme.errorContainer,
                 )
             }
         }
@@ -198,7 +206,30 @@ fun DashboardScreenContent(
             DashboardGraphCard(
                 modifier = Modifier,
                 title = "Accessories Vs Consumption",
-                openDatePicker = {}
+                openDatePicker = {
+                    selectedEvent = {fromDate, toDate ->
+                        DashboardViewEvent.GetAccessoriesConsumption(fromDate, toDate)
+                    }
+                    isDatePickerVisible = true
+                },
+                data.amAccessoriesConsumption ?: AmAccessoriesConsumptionResponse(0,0,0),
+                data.udAccessoriesConsumption ?: UdAccessoriesConsumptionResponse(0,0,0),
+                isLoading = data.consumptionLoader
+            )
+        }
+
+        item {
+            StageWiseGraphCard(
+                modifier =Modifier,
+                title = "Stage Wise Submitted Files",
+                openDatePicker = {
+                    selectedEvent = { fromDate, toDate ->
+                        DashboardViewEvent.GetStageWiseSubCount(fromDate, toDate)
+                    }
+                    isDatePickerVisible = true
+                },
+                data = data.stageWiseSubCount,
+                isLoading = data.stageWiseSubLoader
             )
         }
 

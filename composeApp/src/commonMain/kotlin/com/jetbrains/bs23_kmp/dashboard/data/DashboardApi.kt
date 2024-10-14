@@ -6,10 +6,13 @@ import com.jetbrains.bs23_kmp.dashboard.model.remote.DailyReviewdResponse
 import com.jetbrains.bs23_kmp.dashboard.model.remote.EocCountResponse
 import com.jetbrains.bs23_kmp.dashboard.model.remote.FocCountResponse
 import com.jetbrains.bs23_kmp.dashboard.model.remote.StageWiseSubResponse
+import com.jetbrains.bs23_kmp.dashboard.model.remote.UdAccessoriesConsumptionResponse
 import com.jetbrains.bs23_kmp.dashboard.model.remote.UdCounResponse
 
 interface DashboardApi {
     suspend fun getAmAccessoriesConsumption(fromDate:String, toDate:String ):List<AmAccessoriesConsumptionResponse>
+
+    suspend fun getUdAccessoriesConsumption(fromDate: String, toDate: String): List<UdAccessoriesConsumptionResponse>
 
     suspend fun getAmCount(fromDate: String,toDate: String): List<AmCountResponse>
 

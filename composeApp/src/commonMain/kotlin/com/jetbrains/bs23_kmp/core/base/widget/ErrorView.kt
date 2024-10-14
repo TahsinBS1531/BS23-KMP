@@ -124,8 +124,6 @@ fun ExpandableText(text: String) {
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
-
             Text(
                 text = text,
                 style = MaterialTheme.typography.bodySmall,
@@ -147,9 +145,6 @@ fun ExpandableText(text: String) {
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
-
-
-
 
         ErrorDetailsDialog(isExpanded, text){
             isExpanded = false

@@ -1,5 +1,11 @@
 package com.jetbrains.bs23_kmp.dashboard.presentation
 
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,12 +56,29 @@ fun ShimmeringDashboardCard(modifier: Modifier = Modifier) {
     }
 }
 
+
+
+@Composable
+fun transitionState(): State<Float> {
+
+    val transition = rememberInfiniteTransition()
+    return transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1000f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutLinearInEasing),
+            repeatMode = RepeatMode.Restart
+        )
+    )
+}
+
+@Composable
 fun Modifier.shimmer(): Modifier = this
     .background(
         brush = Brush.linearGradient(
             colors = listOf(Color.Gray.copy(alpha = 0.5f), Color.Gray.copy(alpha = 0.1f), Color.Gray.copy(alpha = 0.5f)),
-            start = Offset.Zero,
-            end = Offset.Infinite
+            start = Offset(transitionState().value, 0f),
+            end = Offset(transitionState().value + 200f, 0f)
         )
     )
     .clip(RectangleShape)

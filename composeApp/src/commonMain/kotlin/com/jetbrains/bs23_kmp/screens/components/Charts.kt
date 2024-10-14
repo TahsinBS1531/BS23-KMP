@@ -6,11 +6,13 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -34,6 +36,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
+import com.jetbrains.bs23_kmp.dashboard.presentation.shimmer
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.math.PI
 import kotlin.math.cos
@@ -56,6 +59,9 @@ fun AnimatedPieChart(
     val total = items.sumOf { it.value.toDouble() }.toFloat()
     var animatedAngle by remember { mutableStateOf(0f) }
 
+    var selectedSlice by remember { mutableStateOf(-1) }
+
+
     LaunchedEffect(Unit) {
         animatedAngle = 360f
     }
@@ -67,8 +73,6 @@ fun AnimatedPieChart(
             animationSpec = tween(durationMillis = animationDuration, delayMillis = index * 200)
         )
     }
-
-
 
     Canvas(modifier = modifier) {
         var startAngle = 0f
@@ -91,7 +95,7 @@ fun AnimatedPieChart(
 }
 
 @Composable
-fun PieChartWithAnimatedLabels(
+fun PieChartWithLines(
     title: String,
     items: List<PieChartItem>,
     modifier: Modifier = Modifier,
@@ -103,7 +107,8 @@ fun PieChartWithAnimatedLabels(
             .aspectRatio(1f),
         contentAlignment = Alignment.Center
     ) {
-        val canvasSize = min(maxWidth, maxHeight)  // Take the smaller dimension to calculate radii dynamically
+        val canvasSize =
+            min(maxWidth, maxHeight)  // Take the smaller dimension to calculate radii dynamically
         val radius = canvasSize * 0.4f  // Outer radius (40% of the canvas size)
         val density = LocalDensity.current
         val radiusPx = with(density) { radius.toPx() }
@@ -180,13 +185,101 @@ fun PieChartWithAnimatedLabels(
             Canvas(modifier = Modifier.fillMaxSize()) {
                 drawLine(
                     color = item.color,
-                    start = Offset(center.x + startX, center.y + startY),  // Start from the pie segment center
+                    start = Offset(
+                        center.x + startX,
+                        center.y + startY
+                    ),  // Start from the pie segment center
                     end = Offset(
                         center.x + labelX - (cos(angleRad) * labelRadiusOffsetPx).toFloat(),
                         center.y + labelY - (sin(angleRad) * labelRadiusOffsetPx).toFloat()
                     ), // End just before hitting the card
                     strokeWidth = 2.dp.toPx()
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun PieChartWithoutLines(
+    title: String,
+    items: List<PieChartItem>,
+    modifier: Modifier = Modifier,
+    animationDuration: Int = 1000,
+    isLoading: Boolean = false
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+    ) {
+        Text(
+            text = if (isLoading) "" else title,
+            modifier = Modifier
+                .padding(8.dp)
+                .then(if (isLoading) Modifier.shimmer() else Modifier),
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            // Legend with shimmer effect for each row
+            Column(modifier = Modifier.weight(1f).padding(4.dp)) {
+                if (isLoading) {
+                    repeat(3) { // Show 3 placeholder rows with shimmer
+                        Row(
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .shimmer(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(12.dp)
+                                    .background(Color.Gray, CircleShape)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Box(
+                                modifier = Modifier
+                                    .width(120.dp)
+                                    .height(16.dp)
+                                    .background(Color.Gray)
+                            )
+                        }
+                    }
+                } else {
+                    items.forEachIndexed { index, pieChartItem ->
+                        Row(
+                            modifier = Modifier.padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(12.dp)
+                                    .background(pieChartItem.color, CircleShape)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                pieChartItem.label,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .aspectRatio(1f)
+                    .align(Alignment.CenterVertically)
+                    .then(if (isLoading) Modifier.shimmer() else Modifier)
+            ) {
+                if (!isLoading) {
+                    AnimatedPieChart(
+                        items = items,
+                        modifier = Modifier.fillMaxSize(),
+                        animationDuration = animationDuration
+                    )
+                }
             }
         }
     }
