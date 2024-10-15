@@ -55,7 +55,6 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -73,6 +72,7 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.jetbrains.bs23_kmp.R
+import com.jetbrains.bs23_kmp.service.rememberLocationServiceFlow
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -103,11 +103,8 @@ actual fun MapTourPage(
     startTime: String,
     endTime: String,
     email: String,
-    navController: NavController
+    navController: NavController,
 ) {
-
-    val fusedLocationClient = rememberFusedLocationProviderClient()
-
     val locationPermissionState =
         rememberPermissionState(permission = "android.permission.ACCESS_FINE_LOCATION")
 
@@ -131,7 +128,7 @@ actual fun MapTourPage(
         ) {
             if (locationPermissionState.status.isGranted) {
                 currentLocation?.let {
-                    if(!isTracking) println(lastTrackedLocations)
+                    if (!isTracking) println(lastTrackedLocations)
                     MapWithLocationTracking1(
                         modifier = Modifier.fillMaxSize(),
                         isTracking = isTracking,
@@ -286,16 +283,16 @@ actual fun MapWithLocationTracking1(
     currentLocation: CoordinatesData?,
     onLocationUpdate: (CoordinatesData) -> Unit,
     trackedLocations: List<CoordinatesData>?,
-    isShowTrack: Boolean
+    isShowTrack: Boolean,
 ) {
 
     //println("isTracking: $isTracking")
     //println("currentLocation: $currentLocation")
     //println("trackedLocations: $trackedLocations")
-    val fusedLocationClient = rememberFusedLocationProviderClient()
+    val locationFlow = rememberLocationServiceFlow()
     val defaultZoom = 15f
     var zoomLevel by remember { mutableStateOf(defaultZoom) } // Track zoom level
-    val converTedCurrentPosition = currentLocation?.coordinates?.let {
+    val convertedCurrentPosition = currentLocation?.coordinates?.let {
         LatLng(it.latitude, it.longitude)
     }
 
@@ -305,7 +302,7 @@ actual fun MapWithLocationTracking1(
 
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(
-            converTedCurrentPosition ?: LatLng(23.42, 90.20), defaultZoom
+            convertedCurrentPosition ?: LatLng(23.42, 90.20), defaultZoom
         )
     }
 
@@ -320,8 +317,8 @@ actual fun MapWithLocationTracking1(
         onDispose { }
     }
 
-    LaunchedEffect(converTedCurrentPosition) {
-        converTedCurrentPosition?.let {
+    LaunchedEffect(convertedCurrentPosition) {
+        convertedCurrentPosition?.let {
             cameraPositionState.animate(
                 CameraUpdateFactory.newLatLng(it), // Only update the position, not the zoom
                 durationMs = 500
@@ -330,22 +327,18 @@ actual fun MapWithLocationTracking1(
     }
 
     LaunchedEffect(isTracking) {
-        //Request Interval Time
-
-        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000L)
-            .setWaitForAccurateLocation(true).build()
-
         if (ActivityCompat.checkSelfPermission(
                 context, "android.permission.ACCESS_FINE_LOCATION"
             ) == 0
         ) {
             scope.launch {
-                fusedLocationClient.getLocationUpdates(locationRequest).collect {
+                locationFlow.collect { location -> // Collect from the location flow provided by the service
+                    println(location)
                     onLocationUpdate(
                         CoordinatesData(
-                            coordinates = LocationData(
-                                it.latitude,
-                                it.longitude
+                            LocationData(
+                                latitude = location.latitude,
+                                longitude = location.longitude
                             )
                         )
                     )
@@ -360,7 +353,7 @@ actual fun MapWithLocationTracking1(
         modifier = modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,
         onMapLoaded = {
-            converTedCurrentPosition?.let {
+            convertedCurrentPosition?.let {
                 scope.launch {
                     cameraPositionState.animate(
                         CameraUpdateFactory.newLatLngZoom(
@@ -384,7 +377,7 @@ actual fun MapWithLocationTracking1(
         val currentMarker = context.vectorToMapMarker(
             R.drawable.ic_current_marker, MaterialTheme.colorScheme.primary
         )
-        converTedCurrentPosition?.let {
+        convertedCurrentPosition?.let {
             Marker(
                 state = MarkerState(position = it), title = "Current Location", icon = currentMarker
             )
@@ -446,7 +439,7 @@ actual fun MapWithLocationTracking1(
 
 @Composable
 actual fun TrackMap1(
-    modifier: Modifier, trackPoints: List<CoordinatesData>
+    modifier: Modifier, trackPoints: List<CoordinatesData>,
 ) {
     val context = LocalContext.current
 
