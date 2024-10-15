@@ -34,6 +34,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
 class LocationTrackingService : Service() {
+    private val LOCATION_INTERVAL_IN_MILLIS = 5 * 1000L
+
 
     private val locationFlow = MutableSharedFlow<Location>() // SharedFlow to emit location data
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -62,7 +64,7 @@ class LocationTrackingService : Service() {
     @OptIn(DelicateCoroutinesApi::class)
     @Suppress("MissingPermission")
     private fun startLocationUpdates() {
-        locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000L)
+        locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, LOCATION_INTERVAL_IN_MILLIS)
             .setWaitForAccurateLocation(true)
             .build()
 
