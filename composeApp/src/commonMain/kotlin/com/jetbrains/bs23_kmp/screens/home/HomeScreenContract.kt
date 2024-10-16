@@ -9,7 +9,8 @@ sealed class HomeScreenEvent {
     data class updateStartTime(val time:String) : HomeScreenEvent()
     data class updateEndTime(val time:String) : HomeScreenEvent()
     data class saveMapData(val email:String) : HomeScreenEvent()
-    data class showLocationHistory(val email: String) : HomeScreenEvent()
+    data class showTodayLocationHistory(val email: String) : HomeScreenEvent()
+    data class showLastWeekLocationHistory(val email: String) : HomeScreenEvent()
     data class deleteDocument(val email: String, val id: String) : HomeScreenEvent()
     data class updateSelectionTab(val index: Int) : HomeScreenEvent()
     data class toggleShowTrack(val isShow: Boolean) : HomeScreenEvent()
@@ -18,6 +19,7 @@ sealed class HomeScreenEvent {
     object SignOut : HomeScreenEvent()
     object resetState : HomeScreenEvent()
     object isShowTrack: HomeScreenEvent()
+
 }
 
 
@@ -43,8 +45,9 @@ data class MapHistoryItem(
     val startTime: String,
     val endTime: String,
     val locations: List<CoordinatesData>,
+    val dateSaved:String
 ){
-    constructor() : this("", "", "", "", "", emptyList())
+    constructor() : this("", "", "", "", "", emptyList(),"")
 }
 
 data class CoordinatesData(

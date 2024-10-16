@@ -22,3 +22,15 @@ actual fun FetchTrackedLocations(
 
 actual fun MapLogOut() {
 }
+
+actual fun fetchTodayData(
+    email: String,
+    onResult: (List<Pair<String, HistoryItemFirestore1>>) -> Unit
+) {
+}
+
+actual fun fetchLastWeekData(
+    email: String,
+    onResult: (List<Pair<String, HistoryItemFirestore1>>) -> Unit
+) {
+}

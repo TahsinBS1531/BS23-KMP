@@ -6,6 +6,10 @@ import com.jetbrains.bs23_kmp.core.base.widget.BaseViewState
 import com.jetbrains.bs23_kmp.screens.auth.AuthService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 class HomeViewModel (private val authService: AuthService): MviViewModel<BaseViewState<HomeSceenState>, HomeScreenEvent>() {
 
@@ -25,7 +29,7 @@ class HomeViewModel (private val authService: AuthService): MviViewModel<BaseVie
 
             is HomeScreenEvent.saveMapData -> saveMapData(eventType.email)
             HomeScreenEvent.showBottomSheet -> toggleBottomSheet(true)
-            is HomeScreenEvent.showLocationHistory -> showLocationHistory(eventType.email)
+            is HomeScreenEvent.showTodayLocationHistory -> showLocationHistory(eventType.email)
             is HomeScreenEvent.toggleShowTrack -> toggleShowTrack(eventType.isShow)
             is HomeScreenEvent.toggleTracking -> toggleTracking(eventType.isTracking)
             is HomeScreenEvent.toogleBottomSheet -> toggleBottomSheet(eventType.isShow)
@@ -33,11 +37,15 @@ class HomeViewModel (private val authService: AuthService): MviViewModel<BaseVie
             is HomeScreenEvent.updateLocation -> updateLocation(eventType.location)
             is HomeScreenEvent.updateSelectionTab -> updateSelectedTab(eventType.index)
             is HomeScreenEvent.updateStartTime -> updateStartTime(eventType.time)
-            HomeScreenEvent.SignOut -> MapLogOut()
+            HomeScreenEvent.SignOut -> mapLogOut()
             HomeScreenEvent.resetState -> resetState()
             HomeScreenEvent.isShowTrack -> {
                 _uiState = _uiState.copy(isShowTrack = true)
                 setState(BaseViewState.Data(_uiState))
+            }
+
+            is HomeScreenEvent.showLastWeekLocationHistory -> {
+                showLastWeekData(eventType.email)
             }
         }
     }
@@ -74,7 +82,7 @@ class HomeViewModel (private val authService: AuthService): MviViewModel<BaseVie
     private fun showLocationHistory(email: String) {
         _uiState = _uiState.copy(historyLoader = true)
         setState(BaseViewState.Data(_uiState))
-        FetchTrackedLocations(email) { result ->
+        fetchTodayData(email) { result ->
             //println(result)
             _uiState = _uiState.copy(
                 trackHistory = result.map { item ->
@@ -89,11 +97,39 @@ class HomeViewModel (private val authService: AuthService): MviViewModel<BaseVie
                             )
                         },
                         startTime = item.second.startTime,
-                        endTime = item.second.endTime
+                        endTime = item.second.endTime,
+                        dateSaved = getFormattedDateFromEpochMillis(item.second.dateSaved),
                     )
                 }
             )
             //println("Track History From viewModel : ${_uiState.trackHistory}")
+            setState(BaseViewState.Data(_uiState))
+        }
+        _uiState = _uiState.copy(historyLoader = false)
+        setState(BaseViewState.Data(_uiState))
+    }
+
+    private fun showLastWeekData(email: String){
+        _uiState = _uiState.copy(historyLoader = true)
+        setState(BaseViewState.Data(_uiState))
+        fetchLastWeekData(email){
+            result ->
+            _uiState = _uiState.copy(
+                trackHistory = result.map { item->
+                    MapHistoryItem(
+                        id = item.first,
+                        title = item.second.title,
+                        description = item.second.description,
+                        locations = item.second.locations.map {
+                            CoordinatesData(it.coordinates, it.time)
+                        },
+                        startTime = item.second.startTime,
+                        endTime = item.second.endTime,
+                        dateSaved = getFormattedDateFromEpochMillis(item.second.dateSaved),
+
+                    )
+                }
+            )
             setState(BaseViewState.Data(_uiState))
         }
         _uiState = _uiState.copy(historyLoader = false)
@@ -138,12 +174,12 @@ class HomeViewModel (private val authService: AuthService): MviViewModel<BaseVie
             "Total Locations : $totalLocations",
             userEmail,
             startTime,
-            endTime
+            formatMillsToTime(Clock.System.now().toEpochMilliseconds())
         )
 
     }
 
-    fun MapLogOut(){
+    fun mapLogOut(){
         viewModelScope.launch {
             authService.signOut()
             _uiState= _uiState.copy(isSignedOut = true)
@@ -160,6 +196,7 @@ data class HistoryItemFirestore1(
     val locations: List<CoordinatesData> = emptyList(),
     val startTime: String = "",
     val endTime: String = "",
+    val dateSaved: Long = Clock.System.now().toEpochMilliseconds()
 )
 
 
@@ -179,3 +216,12 @@ expect fun FetchTrackedLocations(
     email: String,
     onResult: (List<Pair<String, HistoryItemFirestore1>>) -> Unit
 )
+
+expect fun fetchTodayData(email: String,onResult: (List<Pair<String, HistoryItemFirestore1>>) -> Unit)
+expect fun fetchLastWeekData(email: String, onResult: (List<Pair<String, HistoryItemFirestore1>>) -> Unit)
+
+fun getFormattedDateFromEpochMillis(epochMillis: Long): String {
+    val instant = Instant.fromEpochMilliseconds(epochMillis)
+    val dateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
+    return "${dateTime.dayOfMonth.toString().padStart(2, '0')}/${dateTime.monthNumber.toString().padStart(2, '0')}/${dateTime.year}"
+}

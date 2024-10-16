@@ -34,6 +34,9 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -77,7 +80,7 @@ fun MapScreen1(
     val uiState by viewModel.uiState.collectAsState()
     val scheme = MaterialTheme.colorScheme
     LaunchedEffect(Unit) {
-        viewModel.onTriggerEvent(HomeScreenEvent.showLocationHistory(email))
+        viewModel.onTriggerEvent(HomeScreenEvent.showTodayLocationHistory(email))
     }
 
     MapScreenBody1(
@@ -169,7 +172,7 @@ fun MapScreenContent1(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        if(uiState.trackHistory.isNotEmpty()){
+        if (uiState.trackHistory.isNotEmpty()) {
             println("trackHistory: ${uiState.trackHistory.last()}")
         }
         MapTourPage(
@@ -186,7 +189,7 @@ fun MapScreenContent1(
                 onEvent(HomeScreenEvent.toggleTracking(false))
 //                onEvent(HomeScreenEvent.toggleShowTrack(true))
                 onEvent(HomeScreenEvent.saveMapData(email))
-                onEvent(HomeScreenEvent.showLocationHistory(email))
+                onEvent(HomeScreenEvent.showTodayLocationHistory(email))
             },
             onLocationUpdate = {
                 onEvent(HomeScreenEvent.updateLocation(it))
@@ -301,9 +304,11 @@ fun HistoryPage(
 
 ) {
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
+    var selectedIndex by remember { mutableStateOf(0) }
+    val options = listOf("Today", "Previous")
 
     LaunchedEffect(Unit) {
-        viewModel.onTriggerEvent(HomeScreenEvent.showLocationHistory(email))
+        viewModel.onTriggerEvent(HomeScreenEvent.showTodayLocationHistory(email))
     }
 
     when (uiState) {
@@ -323,7 +328,7 @@ fun HistoryPage(
                 val isShowBottomSheet = state?.isShowBottomSheet ?: false
 
                 val trackIndex =
-                    remember { mutableStateOf(MapHistoryItem("", "", "", "", "", emptyList())) }
+                    remember { mutableStateOf(MapHistoryItem("", "", "", "", "", emptyList(), "")) }
 
 
                 //println("Email: $email")
@@ -373,22 +378,47 @@ fun HistoryPage(
 
                     //println("historyItems: $historyItems")
 
-
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                        contentPadding = PaddingValues(16.dp),
-                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
-                    ) {
-                        if (historyItems.isEmpty() && (state?.historyLoader == true || state?.historyLoader == false)) {
-                            item {
-                                Text(
-                                    text = "No history found",
-                                    modifier = Modifier.fillMaxWidth(),
-                                    textAlign = TextAlign.Center,
-                                    color = Color.Gray
-                                )
+                    SingleChoiceSegmentedButtonRow {
+                        options.forEachIndexed { index, option ->
+                            SegmentedButton(
+                                selected = selectedIndex == index,
+                                onClick = {
+                                    selectedIndex = index
+                                    if (index == 0) {
+                                        viewModel.onTriggerEvent(
+                                            HomeScreenEvent.showTodayLocationHistory(email)
+                                        )
+                                    } else {
+                                        viewModel.onTriggerEvent(
+                                            HomeScreenEvent.showLastWeekLocationHistory(email)
+                                        )
+                                    }
+                                },
+                                shape = SegmentedButtonDefaults.itemShape(
+                                    index = index,
+                                    count = options.size
+                                ),
+                            ) {
+                                Text(option)
                             }
-                        } else {
+                        }
+                    }
+
+                    if (historyItems.isEmpty() && (state?.historyLoader == true || state?.historyLoader == false)) {
+
+                        Text(
+                            text = "No history found",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            color = Color.Gray
+                        )
+
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            contentPadding = PaddingValues(16.dp),
+                            modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                        ) {
                             itemsIndexed(historyItems) { _, item ->
                                 HistoryCard(
                                     item = item,
@@ -404,15 +434,17 @@ fun HistoryPage(
                                             )
                                         )
                                         viewModel.onTriggerEvent(
-                                            HomeScreenEvent.showLocationHistory(
+                                            HomeScreenEvent.showTodayLocationHistory(
                                                 email
                                             )
                                         )
-                                    }
+                                    },
+                                    selectedIndex = selectedIndex
                                 )
                             }
                         }
                     }
+
                     if (isShowBottomSheet) {
                         ModalBottomSheet(
                             sheetState = rememberModalBottomSheetState(
@@ -452,7 +484,8 @@ fun HistoryCard(
     modifier: Modifier = Modifier,
     item: MapHistoryItem,
     onClick: (MapHistoryItem) -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    selectedIndex: Int = 0
 ) {
     if (item.locations.isEmpty()) {
         return
@@ -476,9 +509,11 @@ fun HistoryCard(
         startLocation,
         endLocation,
         onClick = { onClick(item) },
-        onDelete = onDelete
+        onDelete = onDelete,
+        selectedIndex = selectedIndex
     )
 }
+
 @Composable
 fun HistoryCardDetails(
     modifier: Modifier = Modifier,
@@ -488,8 +523,7 @@ fun HistoryCardDetails(
 
     onClick: (item: MapHistoryItem) -> Unit,
     onDelete: () -> Unit
-)
-{
+) {
     OutlinedCard(
         modifier = modifier
             .fillMaxWidth(),
@@ -613,7 +647,6 @@ fun interpolateColor(
 }
 
 
-
 @Composable
 fun HistoryCardDetailsRenovate(
     modifier: Modifier = Modifier,
@@ -622,13 +655,16 @@ fun HistoryCardDetailsRenovate(
     endLocation: String,
 
     onClick: (item: MapHistoryItem) -> Unit,
-    onDelete: () -> Unit
-)
-{
+    onDelete: () -> Unit,
+    selectedIndex: Int = 0
+) {
+
+    println("HistoryCardDetailsRenovate called")
+    println("Formated Date : ${item.dateSaved}")
     OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
         onClick = { onClick(item) },
-    ){
+    ) {
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -637,13 +673,48 @@ fun HistoryCardDetailsRenovate(
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
+                Box(
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .fillMaxWidth(),
+                ) {
 
+                    AppBadgeWithLabel(
+                        modifier = Modifier.align(Alignment.CenterStart),
+                        label = "Start",
+                        content = formatMillsToTime(item.locations.first().time)
+                    )
+                    if (selectedIndex == 1) {
+                        Text(
+                            item.dateSaved,
+                            modifier = Modifier.align(Alignment.CenterEnd),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+
+                }
                 LocationSection(
                     label = "Start",
                     location = startLocation,
                     time = formatMillsToTime(item.locations.first().time)
                 )
                 Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+
+                    AppBadgeWithLabel(
+                        modifier = Modifier,
+                        label = "End",
+                        content = formatMillsToTime(item.locations.first().time)
+                    )
+
+                }
 
                 LocationSection(
                     label = "End",
@@ -658,12 +729,12 @@ fun HistoryCardDetailsRenovate(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
-            ){
+            ) {
 
 
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ){
+                ) {
                     IconButton(
                         onClick = {}
                     ) {
@@ -675,7 +746,7 @@ fun HistoryCardDetailsRenovate(
 
                 }
                 TextButton(
-                    onClick = {onClick(item)}
+                    onClick = { onClick(item) }
                 ) {
                     Text("Show on map")
                 }
@@ -692,29 +763,29 @@ fun LocationSection(
     label: String,
     location: String,
     time: String
-){
-    Row(
-        modifier = Modifier
-            .padding(vertical = 8.dp)
-            .fillMaxWidth(),
-
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-//        Text(label, style = MaterialTheme.typography.titleSmall)
-//        Badge(
-//            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-//            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-//        ){
-//            Text(text = time, modifier = Modifier.padding(4.dp) )
-//        }
-
-        AppBadgeWithLabel(
-            label = label,
-            content = time
-        )
-
-    }
+) {
+//    Row(
+//        modifier = Modifier
+//            .padding(vertical = 8.dp)
+//            .fillMaxWidth(),
+//
+//        verticalAlignment = Alignment.CenterVertically,
+//        horizontalArrangement = Arrangement.spacedBy(12.dp)
+//    ) {
+////        Text(label, style = MaterialTheme.typography.titleSmall)
+////        Badge(
+////            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+////            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+////        ){
+////            Text(text = time, modifier = Modifier.padding(4.dp) )
+////        }
+//
+//        AppBadgeWithLabel(
+//            label = label,
+//            content = time
+//        )
+//
+//    }
 
     Card(
 
@@ -725,10 +796,10 @@ fun LocationSection(
             contentColor = MaterialTheme.colorScheme.onSurface
         ),
         shape = MaterialTheme.shapes.small
-    ){
+    ) {
         Text(
             modifier = Modifier.padding(10.dp),
-            text=location
+            text = location
         )
     }
 
